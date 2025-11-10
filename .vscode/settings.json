@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "inimigo.h": "c"
+        "inimigo.h": "c",
+        "bitmap.h": "c"
     }
 }

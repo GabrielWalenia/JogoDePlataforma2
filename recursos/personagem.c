@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "personagem.h"
 
 
-personagem* personagem_create(unsigned int height, unsigned int width, unsigned int x, unsigned int y, unsigned int max_x, unsigned int max_y){
+personagem* personagem_create(int height, int width, int x, int y, int max_x, int max_y){
 
     //Verifica se o local de "nascimento" do personagem é valido
     if ((x - width/2 < 0) || (x + width/2 > max_x) || (y - height/2 < 0) || (y + height/2 > max_y)) return NULL;
@@ -17,14 +18,26 @@ personagem* personagem_create(unsigned int height, unsigned int width, unsigned 
     new_personagem->height = height;
     new_personagem->x = x;
     new_personagem->y = y;
+    new_personagem->controle = joystick_create();
+    
+    if(!new_personagem->controle){
+        free(new_personagem);
+        return NULL;
+    }
 
     return new_personagem;
 }
-void personagem_move(personagem *elemento,  unsigned int steps, unsigned char trajectory, unsigned int max_x, unsigned int max_y){
+void personagem_move(personagem *elemento, int steps,  char trajectory,  int max_x, int max_y){
+    
+    // printf("posicao x = %d\n", elemento->x);
+    // printf("posicao y = %d\n", elemento->y);
+
     //Movimentação a esquerda
     if(!trajectory){
-        if ((elemento->x - steps*MAN_STEPS) - elemento->width/2 >= 0)
+        if ((elemento->x - steps*MAN_STEPS) - elemento->width/2 >= 0){
+            
             elemento->x = elemento->x - steps*MAN_STEPS;
+        }
     }
     //Direita
     else if(trajectory == 1){
@@ -45,5 +58,6 @@ void personagem_move(personagem *elemento,  unsigned int steps, unsigned char tr
     }
 }
 void personagem_destroy(personagem *elemento){
+    joystick_destroy(elemento->controle);
     free(elemento);
 }

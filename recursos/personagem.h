@@ -1,19 +1,23 @@
 #ifndef __PERSONAGEM__
 #define __PERSONAGEM__
 
+#include "joystick.h"
+
 #define MAN_STEPS 20
+#define GRAVITY 10
 
 typedef struct {
 
-    unsigned int height, width;
-    unsigned int x;
-    unsigned int y;
+    int height, width;
+    int x;
+    int y;
+    joystick *controle;
 
 } personagem;
 
-personagem* personagem_create(unsigned int height, unsigned int width, unsigned int x, unsigned int y,
-    unsigned int max_x, unsigned int max_y);
-void personagem_move(personagem *elemento,  unsigned int steps, unsigned char trajectory, unsigned int max_x, unsigned int max_y);
+personagem* personagem_create(int height, int width, int x, int y,
+    int max_x, int max_y);
+void personagem_move(personagem *elemento,  int steps, char trajectory, int max_x, int max_y);
 void personagem_destroy(personagem *elemento);
 
 #endif

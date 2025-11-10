@@ -1,2 +1,6 @@
+TARGET = game
+SOURCES = main.c ./recursos/personagem.c ./recursos/inimigo.c ./recursos/joystick.c
+ALLEGRO_FLAGS = $(shell pkg-config allegro-5 allegro_main-5 allegro_font-5 allegro_primitives-5 allegro_image-5 --libs --cflags)
+
 all:
-	gcc main.c -o game $(pkg-config allegro-5 allegro_main-5 allegro_font-5 --libs --cflags)
+	gcc $(SOURCES) -o $(TARGET) $(ALLEGRO_FLAGS)

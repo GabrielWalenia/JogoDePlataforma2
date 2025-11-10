@@ -5,15 +5,15 @@
 
 typedef struct {
 
-    unsigned int height, width;
-    unsigned int x;
-    unsigned int y;
+    int height, width;
+    int x;
+    int y;
 
 } inimigo;
 
-inimigo* inimigo_create(unsigned int height, unsigned int width, unsigned int x, unsigned int y,
-    unsigned int max_x, unsigned int max_y);
-void inimigo_move(inimigo *elemento,  unsigned int steps, unsigned char trajectory, unsigned int max_x, unsigned int max_y);
+inimigo* inimigo_create(int height, int width, int x, int y,
+    int max_x, int max_y);
+void inimigo_move(inimigo *elemento,  int steps, char trajectory, int max_x, int max_y);
 void inimigo_destroy(inimigo *elemento);
 
 #endif
