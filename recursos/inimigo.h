@@ -1,7 +1,7 @@
 #ifndef __INIMIGO__
 #define __INIMIGO__
 
-#define ENEMY_STEPS 20
+#define ENEMY_STEPS 10
 
 typedef struct {
 

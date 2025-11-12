@@ -7,7 +7,7 @@
 joystick* joystick_create(){
     joystick *controle = (joystick *) malloc(sizeof(joystick));
     if(!controle){
-        printf("Não foi possível alocar memória!");
+        printf("Não foi possível alocar memória!\n");
         return NULL;
     }
     controle->right = 0;

@@ -9,7 +9,7 @@ inimigo* inimigo_create(int height, int width, int x, int y, int max_x, int max_
 
     inimigo *new_inimigo = (inimigo*) malloc(sizeof(inimigo));
     if(!new_inimigo){
-        printf("Não foi possível alocar memória");
+        printf("Não foi possível alocar memória\n");
         return NULL;
     }
 
@@ -20,5 +20,38 @@ inimigo* inimigo_create(int height, int width, int x, int y, int max_x, int max_
 
     return new_inimigo;
 
-    
+}
+
+void inimigo_move(inimigo *elemento,  int steps, char trajectory, int max_x, int max_y){
+
+    if(!trajectory){
+        if ((elemento->x - steps*ENEMY_STEPS) - elemento->width/2 >= 0){
+            
+            elemento->x = elemento->x - steps*ENEMY_STEPS;
+        } else {
+            elemento->x = 1280;
+        }
+    }
+    //Direita
+    else if(trajectory == 1){
+        if((elemento->x + steps*ENEMY_STEPS) + elemento->width/2 <= max_x){
+            elemento->x = elemento->x + steps*ENEMY_STEPS;
+        }
+    }
+    //Cima
+    else if(trajectory == 2){
+        if((elemento->y - steps*ENEMY_STEPS) - elemento->height/2 >= 0){
+            elemento->y = elemento->y - steps*ENEMY_STEPS;
+        }
+    }
+    //Baixo
+    else{
+        if((elemento->y+ steps*ENEMY_STEPS) + elemento->height <= max_y){
+            elemento->y = elemento->y + steps*ENEMY_STEPS;
+        }
+    }
+}
+
+void inimigo_destroy(inimigo *elemento){
+    free(elemento);
 }

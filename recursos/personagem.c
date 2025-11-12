@@ -41,8 +41,9 @@ void personagem_move(personagem *elemento, int steps,  char trajectory,  int max
     }
     //Direita
     else if(trajectory == 1){
-        if((elemento->x + steps*MAN_STEPS) + elemento->width/2 <= max_x)
+        if((elemento->x + steps*MAN_STEPS) + elemento->width/2 <= max_x){
             elemento->x = elemento->x + steps*MAN_STEPS;
+        }
     }
     //Cima
     else if(trajectory == 2){

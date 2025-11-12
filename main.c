@@ -32,11 +32,44 @@ gaw24@h41:~$ echo $((718/12))
 
 #define X_SCREEN 1280
 #define Y_SCREEN 720
+#define MAX_ENEMYS 6
+#define GRAVIDADE 10
 
+
+void animacao(const char *file, personagem *player_1, int tipo){
+
+    // float frame = 0.f;
+    // int pos_x = 0, pos_y = 0;
+    // int current_frame_y = 0;
+    
+    // ALLEGRO_BITMAP *skin = al_load_bitmap(file);
+
+    // if(tipo == 0){
+    //     frame += 0.04f;
+    //     if(frame > 4){
+    //         frame -= 4;
+    //     }
+    // al_draw_bitmap_region(skin, 0, 118 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
+    // }
+
+
+}
+
+int verificar_colisao(personagem *elemento_1, inimigo *elemento_2){
+    
+    if((elemento_1->y + elemento_1->height/2 >= elemento_2->y - elemento_2->height/2) && (elemento_2->y - elemento_2->height/2 >=elemento_1->y-elemento_1->height/2) ||
+    ((elemento_2->y+elemento_2->height/2 >= elemento_1->y-elemento_1->height/2) && (elemento_1->y-elemento_1->height/2 >= elemento_2->y-elemento_2->height/2)) &&
+    (((elemento_1->x+elemento_1->width/2 >= elemento_2->x-elemento_2->width/2) && (elemento_2->x-elemento_2->width/2 >= elemento_1->x-elemento_1->width/2)) ||
+    ((elemento_2->x+elemento_2->width/2 >= elemento_1->x-elemento_1->width/2) && (elemento_1->x-elemento_1->width/2 >= elemento_2->x-elemento_2->width/2)))) return 1;
+
+    else return 0;
+
+}
 
 void update_position(personagem *player_1){
     if (player_1->controle->left){
         personagem_move(player_1, 1, 0, X_SCREEN, Y_SCREEN);
+        animacao(PERSONAGEM_SPRITE, player_1, 0);
     }
     if (player_1->controle->right){
         personagem_move(player_1, 1, 1, X_SCREEN, Y_SCREEN);
@@ -68,6 +101,8 @@ int main(){
     int pos_x = 0, pos_y = 0;
     int current_frame_y = 0;
 
+    inimigo *vetor_inimigos[MAX_ENEMYS];
+
     ALLEGRO_TIMER *timer = al_create_timer(1.0/30.0);
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
     ALLEGRO_FONT *font = al_create_builtin_font();
@@ -87,16 +122,27 @@ int main(){
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
 
+    // -----------------------------------
+    // Elementos
+
     personagem* player_1 = personagem_create(20, 20, 10, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
     if (!player_1) return 1;
 
-    ALLEGRO_BITMAP *personagem = al_load_bitmap(PERSONAGEM_SPRITE);
+    for(int i = 0; i<MAX_ENEMYS; i++){
+        vetor_inimigos[i] = inimigo_create(20, 20, 1 + rand()%1280, 700, X_SCREEN, Y_SCREEN);
+
+    }
+    // inimigo *enemy = inimigo_create(20, 20, X_SCREEN - 10, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
+
+    ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
     
     ALLEGRO_EVENT event;
 
     al_start_timer(timer);
     
+    //-----------------------------------
+    // Jogo
     while(1){
         al_wait_for_event(queue, &event);
 
@@ -108,19 +154,32 @@ int main(){
             }else{
                 update_position(player_1);
                 // al_draw_bitmap(background,0,0,0);
-                //al_clear_to_color(al_map_rgb(39, 104, 88));
+                al_clear_to_color(al_map_rgb(39, 104, 88));
 
                 frame +=0.04f;
                 if(frame > 4){
                     frame -= 4;
                 }
-                al_draw_bitmap(background, 0, 0, 0);
+
+                //al_draw_bitmap(background, 0, 0, 0);
+
                 al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
-                al_draw_bitmap_region(personagem, 0, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
+                
+                for(int i = 0; i<MAX_ENEMYS; i++){
+                    inimigo_move(vetor_inimigos[i], 1, 0, X_SCREEN, Y_SCREEN);
+                    if(vetor_inimigos[i]->x < 0){
+                        vetor_inimigos[i]->x = X_SCREEN;
+                    }
+                    al_draw_filled_rectangle(vetor_inimigos[i]->x-vetor_inimigos[i]->width/2, 
+                        vetor_inimigos[i]->y-vetor_inimigos[i]->height/2, vetor_inimigos[i]->x+vetor_inimigos[i]->width/2, vetor_inimigos[i]->y+vetor_inimigos[i]->height/2, al_map_rgb(0, 0, 255));
+                }
+                al_draw_bitmap_region(skin, 0, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
+                
                 al_flip_display();
             }
-            }
-        else if ((event.type == 10) || (event.type == 12)){
+
+        }else if ((event.type == 10) || (event.type == 12)){
+
             if (event.keyboard.keycode == 82) joystick_left(player_1->controle);
             else if (event.keyboard.keycode == 83) joystick_right(player_1->controle);
             else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
@@ -131,10 +190,10 @@ int main(){
         else if(event.type == 42)
             break;
     }
-    
 
 
-    al_destroy_bitmap(personagem);
+
+    al_destroy_bitmap(skin);
     al_destroy_bitmap(background);
 
     al_destroy_font(font);
