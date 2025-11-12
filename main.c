@@ -167,9 +167,7 @@ int main(){
                 
                 for(int i = 0; i<MAX_ENEMYS; i++){
                     inimigo_move(vetor_inimigos[i], 1, 0, X_SCREEN, Y_SCREEN);
-                    if(vetor_inimigos[i]->x < 0){
-                        vetor_inimigos[i]->x = X_SCREEN;
-                    }
+                    
                     al_draw_filled_rectangle(vetor_inimigos[i]->x-vetor_inimigos[i]->width/2, 
                         vetor_inimigos[i]->y-vetor_inimigos[i]->height/2, vetor_inimigos[i]->x+vetor_inimigos[i]->width/2, vetor_inimigos[i]->y+vetor_inimigos[i]->height/2, al_map_rgb(0, 0, 255));
                 }
