@@ -3,7 +3,7 @@
 #include "personagem.h"
 
 
-personagem* personagem_create(int height, int width, int x, int y, int max_x, int max_y){
+personagem* personagem_create(int height, int width, float x, float y, int max_x, int max_y){
 
     //Verifica se o local de "nascimento" do personagem é valido
     if ((x - width/2 < 0) || (x + width/2 > max_x) || (y - height/2 < 0) || (y + height/2 > max_y)) return NULL;

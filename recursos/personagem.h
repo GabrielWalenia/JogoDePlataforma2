@@ -3,19 +3,19 @@
 
 #include "joystick.h"
 
-#define MAN_STEPS 20
+#define MAN_STEPS 10
 #define GRAVITY 10
 
 typedef struct {
 
     int height, width;
-    int x;
-    int y;
+    float x;
+    float y;
     joystick *controle;
 
 } personagem;
 
-personagem* personagem_create(int height, int width, int x, int y,
+personagem* personagem_create(int height, int width, float x, float y,
     int max_x, int max_y);
 void personagem_move(personagem *elemento,  int steps, char trajectory, int max_x, int max_y);
 void personagem_destroy(personagem *elemento);

@@ -89,7 +89,7 @@ int main(){
     // Iniciação componentes
     al_init();
     al_install_keyboard();
-    // al_init_ttf_addon();
+    al_init_ttf_addon();
     al_init_primitives_addon();
     al_init_image_addon();
 
@@ -105,12 +105,13 @@ int main(){
 
     ALLEGRO_TIMER *timer = al_create_timer(1.0/30.0);
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
-    ALLEGRO_FONT *font = al_create_builtin_font();
+    ALLEGRO_FONT *font = al_load_ttf_font("./imagens/Freedom-10eM.ttf", 36, 0);
     ALLEGRO_DISPLAY *disp = al_create_display(1280, 720);
 
 
     // -----------------------------------
-    
+    // Iniciando a fila
+
     // Imagens:
     // ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);;
     // if(!background){
@@ -121,11 +122,11 @@ int main(){
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
-
+    al_set_window_title(disp, "Game");
     // -----------------------------------
     // Elementos
 
-    personagem* player_1 = personagem_create(20, 20, 10, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
+    personagem* player_1 = personagem_create(20, 20, 10.0, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
     if (!player_1) return 1;
 
     for(int i = 0; i<MAX_ENEMYS; i++){
@@ -149,18 +150,15 @@ int main(){
         if(event.type == 30){
             if(menu){
                 al_clear_to_color(al_map_rgb(0, 0, 0));
-                al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, 0, "PRESSIONE ENTER");
+                al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "Joguinho do ninja");
+                al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2 + 40, ALLEGRO_ALIGN_CENTER, "PRESSIONE ENTER");
                 al_flip_display();
             }else{
                 update_position(player_1);
                 // al_draw_bitmap(background,0,0,0);
                 al_clear_to_color(al_map_rgb(39, 104, 88));
 
-                frame +=0.04f;
-                if(frame > 4){
-                    frame -= 4;
-                }
-
+          
                 //al_draw_bitmap(background, 0, 0, 0);
 
                 al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
@@ -171,11 +169,29 @@ int main(){
                     al_draw_filled_rectangle(vetor_inimigos[i]->x-vetor_inimigos[i]->width/2, 
                         vetor_inimigos[i]->y-vetor_inimigos[i]->height/2, vetor_inimigos[i]->x+vetor_inimigos[i]->width/2, vetor_inimigos[i]->y+vetor_inimigos[i]->height/2, al_map_rgb(0, 0, 255));
                 }
+
+            // Desenhar o sprite na tela
+            
+            if(player_1->controle->right){
+                frame +=0.4f;
+                if(frame > 4){
+                    frame -= 4;
+                }
+                al_draw_bitmap_region(skin, 59, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
+            } else if(player_1->controle->left) {
                 al_draw_bitmap_region(skin, 0, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
-                
-                al_flip_display();
+            } else {
+                frame +=0.04f;
+                if(frame > 4){
+                    frame -= 4;
+                }
+
+                al_draw_bitmap_region(skin, 0, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
             }
 
+                al_flip_display();
+            }
+    
         }else if ((event.type == 10) || (event.type == 12)){
 
             if (event.keyboard.keycode == 82) joystick_left(player_1->controle);
