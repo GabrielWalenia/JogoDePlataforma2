@@ -3,7 +3,7 @@
 #include "personagem.h"
 
 
-personagem* personagem_create(int height, int width, float x, float y, int max_x, int max_y){
+personagem* personagem_create(int hp, int height, int width, float x, float y, int max_x, int max_y){
 
     //Verifica se o local de "nascimento" do personagem é valido
     if ((x - width/2 < 0) || (x + width/2 > max_x) || (y - height/2 < 0) || (y + height/2 > max_y)) return NULL;
@@ -13,7 +13,8 @@ personagem* personagem_create(int height, int width, float x, float y, int max_x
         printf("Não foi possível alocar memória");
         return NULL;
     }
-
+    
+    new_personagem->hp = hp;
     new_personagem->width = width;
     new_personagem->height = height;
     new_personagem->x = x;
@@ -53,7 +54,7 @@ void personagem_move(personagem *elemento, int steps,  char trajectory,  int max
     }
     //Baixo
     else{
-        if((elemento->y+ steps*MAN_STEPS) + elemento->height <= max_y){
+        if((elemento->y+ steps*MAN_STEPS) + elemento->height/2 <= max_y){
             elemento->y = elemento->y + steps*MAN_STEPS;
         }
     }

@@ -8,7 +8,9 @@ pos y
 gaw24@h41:~$ echo $((718/12))
 59
 
-
+sprite 2
+x: 50
+y: 77
 */
 
 
@@ -28,10 +30,11 @@ gaw24@h41:~$ echo $((718/12))
 #include "./recursos/joystick.h"
 
 #define BACKGROUND_FILE "./imagens/environment_forestbackground.png"
-#define PERSONAGEM_SPRITE "./imagens/player_sprite.png"
+#define PERSONAGEM_SPRITE "./imagens/ninja.png"
 
 #define X_SCREEN 1280
 #define Y_SCREEN 720
+#define MAX_PULO 50
 #define MAX_ENEMYS 6
 #define GRAVIDADE 10
 
@@ -68,18 +71,25 @@ int verificar_colisao(personagem *elemento_1, inimigo *elemento_2){
 
 void update_position(personagem *player_1){
     if (player_1->controle->left){
-        personagem_move(player_1, 1, 0, X_SCREEN, Y_SCREEN);
+        personagem_move(player_1, 1, 0, X_SCREEN, Y_SCREEN - 20);
         animacao(PERSONAGEM_SPRITE, player_1, 0);
     }
     if (player_1->controle->right){
-        personagem_move(player_1, 1, 1, X_SCREEN, Y_SCREEN);
+        personagem_move(player_1, 1, 1, X_SCREEN, Y_SCREEN  - 20);
     }
     if (player_1->controle->up){
-        personagem_move(player_1, 1, 2, X_SCREEN, Y_SCREEN);
+        personagem_move(player_1, 1, 2, X_SCREEN, Y_SCREEN  - 20);
     }
         if (player_1->controle->down){
-        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN);
+        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN  - 20);
     }
+}
+
+void cair(personagem *player){
+    player->y += GRAVIDADE;
+}
+void pular(personagem *player){
+    player->y -= GRAVIDADE;
 }
 
 int main(){
@@ -96,7 +106,7 @@ int main(){
     // -----------------------------------
     // Variáveis
 
-    bool menu = true;
+    bool menu = true, caindo = true;
     float frame = 0.f;
     int pos_x = 0, pos_y = 0;
     int current_frame_y = 0;
@@ -126,11 +136,11 @@ int main(){
     // -----------------------------------
     // Elementos
 
-    personagem* player_1 = personagem_create(20, 20, 10.0, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
+    personagem* player_1 = personagem_create(3, 77, 50, 25.0, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
     if (!player_1) return 1;
 
     for(int i = 0; i<MAX_ENEMYS; i++){
-        vetor_inimigos[i] = inimigo_create(20, 20, 1 + rand()%1280, 700, X_SCREEN, Y_SCREEN);
+        vetor_inimigos[i] = inimigo_create(20, 20, 1 + rand()%1280, 690, X_SCREEN, Y_SCREEN);
 
     }
     // inimigo *enemy = inimigo_create(20, 20, X_SCREEN - 10, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
@@ -148,6 +158,8 @@ int main(){
         al_wait_for_event(queue, &event);
 
         if(event.type == 30){
+            // if(player_1->y + player_1->height/2 + GRAVIDADE< 690 - MAX_PULO );
+            //     caindo = true;
             if(menu){
                 al_clear_to_color(al_map_rgb(0, 0, 0));
                 al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "Joguinho do ninja");
@@ -162,7 +174,7 @@ int main(){
                 //al_draw_bitmap(background, 0, 0, 0);
 
                 al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
-                
+                al_draw_filled_rectangle(0, Y_SCREEN-20, X_SCREEN, Y_SCREEN, al_map_rgb(0, 255, 0));
                 for(int i = 0; i<MAX_ENEMYS; i++){
                     inimigo_move(vetor_inimigos[i], 1, 0, X_SCREEN, Y_SCREEN);
                     
@@ -173,21 +185,28 @@ int main(){
             // Desenhar o sprite na tela
             
             if(player_1->controle->right){
-                frame +=0.4f;
-                if(frame > 4){
-                    frame -= 4;
+                frame +=0.8f;
+                if(frame > 8){
+                    frame -= 8;
                 }
-                al_draw_bitmap_region(skin, 59, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
+                al_draw_bitmap_region(skin, 50 * (int) frame, 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
             } else if(player_1->controle->left) {
-                al_draw_bitmap_region(skin, 0, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
-            } else {
-                frame +=0.04f;
-                if(frame > 4){
-                    frame -= 4;
+                frame +=0.8f;
+                if(frame > 8){
+                    frame -= 8;
                 }
+                al_draw_bitmap_region(skin, 50 * (int) frame, 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+            } else {
 
-                al_draw_bitmap_region(skin, 0, 59 * (int) frame, 59, 59, player_1->x - player_1->width, player_1->y - player_1->height, 0);
+                al_draw_bitmap_region(skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
             }
+                
+                if(caindo){
+                    cair(player_1);
+                    if((player_1->y + GRAVIDADE) + player_1->height/2 >= 690){
+                        caindo= false;
+                    }
+                }
 
                 al_flip_display();
             }
@@ -198,7 +217,14 @@ int main(){
             else if (event.keyboard.keycode == 83) joystick_right(player_1->controle);
             else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
             else if (event.keyboard.keycode == 85) joystick_down(player_1->controle);
+            else if (event.keyboard.keycode == ALLEGRO_KEY_SPACE) pular(player_1);
             else if(event.keyboard.keycode == ALLEGRO_KEY_ENTER) menu = false;
+        }
+        else if(player_1->hp <= 0){
+            al_clear_to_color(al_map_rgb(0, 0, 0));
+            al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "Game Over");
+            al_flip_display();
+
         }
 
         else if(event.type == 42)

@@ -7,7 +7,7 @@
 #define GRAVITY 10
 
 typedef struct {
-
+    int hp; 
     int height, width;
     float x;
     float y;
@@ -15,7 +15,7 @@ typedef struct {
 
 } personagem;
 
-personagem* personagem_create(int height, int width, float x, float y,
+personagem* personagem_create(int hp, int height, int width, float x, float y,
     int max_x, int max_y);
 void personagem_move(personagem *elemento,  int steps, char trajectory, int max_x, int max_y);
 void personagem_destroy(personagem *elemento);
