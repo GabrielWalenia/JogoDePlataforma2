@@ -36,8 +36,8 @@ y: 77
 #define Y_SCREEN 720
 #define MAX_PULO 50
 #define MAX_ENEMYS 6
-#define GRAVIDADE 10
-
+#define GRAVIDADE 8
+#define VELOCIDADE 20
 
 void animacao(const char *file, personagem *player_1, int tipo){
 
@@ -85,11 +85,13 @@ void update_position(personagem *player_1){
     }
 }
 
-void cair(personagem *player){
-    player->y += GRAVIDADE;
+void cair(personagem *player, int gravidade){
+    player->y += gravidade;
+    gravidade += 2;
 }
 void pular(personagem *player){
-    player->y -= GRAVIDADE;
+    player->caindo = false;
+    player->vy = VELOCIDADE;
 }
 
 int main(){
@@ -106,10 +108,11 @@ int main(){
     // -----------------------------------
     // Variáveis
 
-    bool menu = true, caindo = true;
+    bool menu = true;
     float frame = 0.f;
     int pos_x = 0, pos_y = 0;
     int current_frame_y = 0;
+    int gravidade = GRAVIDADE;
 
     inimigo *vetor_inimigos[MAX_ENEMYS];
 
@@ -196,16 +199,31 @@ int main(){
                     frame -= 8;
                 }
                 al_draw_bitmap_region(skin, 50 * (int) frame, 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+            
+            }else if(player_1->controle->up) {
+                frame += 0.4f;
+                if(frame > 4){
+                    frame -= 4;
+                }
+                al_draw_bitmap_region(skin, 200 + 50 * (int) frame, 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
             } else {
 
                 al_draw_bitmap_region(skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
             }
                 
-                if(caindo){
-                    cair(player_1);
+                if(player_1->caindo){
+                    player_1->y += gravidade;
+                    gravidade += 2;
                     if((player_1->y + GRAVIDADE) + player_1->height/2 >= 690){
-                        caindo= false;
+                        player_1->caindo = false;
                     }
+                } else {
+                    if(player_1->vy <= 0){
+                        player_1->caindo = false;
+                    } else{
+                        player_1->vy -= gravidade;
+                    }
+
                 }
 
                 al_flip_display();
@@ -217,7 +235,7 @@ int main(){
             else if (event.keyboard.keycode == 83) joystick_right(player_1->controle);
             else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
             else if (event.keyboard.keycode == 85) joystick_down(player_1->controle);
-            else if (event.keyboard.keycode == ALLEGRO_KEY_SPACE) pular(player_1);
+
             else if(event.keyboard.keycode == ALLEGRO_KEY_ENTER) menu = false;
         }
         else if(player_1->hp <= 0){

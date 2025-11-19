@@ -21,6 +21,8 @@ personagem* personagem_create(int hp, int height, int width, float x, float y, i
     new_personagem->y = y;
     new_personagem->controle = joystick_create();
     
+    new_personagem->caindo = true;
+    
     if(!new_personagem->controle){
         free(new_personagem);
         return NULL;

@@ -1,17 +1,26 @@
 #ifndef __PERSONAGEM__
 #define __PERSONAGEM__
 
+#include <stdbool.h>
 #include "joystick.h"
+
 
 #define MAN_STEPS 10
 #define GRAVITY 10
 
 typedef struct {
+    // Antigo
+    
     int hp; 
     int height, width;
     float x;
     float y;
     joystick *controle;
+
+    // Novo
+
+    int vx, vy;
+    bool caindo;
 
 } personagem;
 
