@@ -13,13 +13,13 @@ typedef struct {
     
     int hp; 
     int height, width;
-    float x;
-    float y;
+    int x;
+    int y;
     joystick *controle;
 
     // Novo
 
-    int vx, vy;
+    int vel_x, vel_y;
     bool caindo;
 
 } personagem;

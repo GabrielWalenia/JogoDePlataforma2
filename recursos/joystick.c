@@ -14,6 +14,7 @@ joystick* joystick_create(){
     controle->left = 0;
     controle->up = 0;
     controle->down = 0;
+    controle->jump = 0;
 
     return controle;
 }
@@ -38,4 +39,7 @@ void joystick_up(joystick *controle){
 void joystick_down(joystick *controle){
     controle->down = controle->down ^ 1;
 
+}
+void joystick_jump(joystick *controle){
+    controle->jump = controle->jump ^1;
 }

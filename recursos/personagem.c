@@ -22,7 +22,8 @@ personagem* personagem_create(int hp, int height, int width, float x, float y, i
     new_personagem->controle = joystick_create();
     
     new_personagem->caindo = true;
-    
+    new_personagem->vel_x = 0;
+    new_personagem->vel_y = 0;
     if(!new_personagem->controle){
         free(new_personagem);
         return NULL;
@@ -55,10 +56,14 @@ void personagem_move(personagem *elemento, int steps,  char trajectory,  int max
         }
     }
     //Baixo
-    else{
+    else if(trajectory == 3){
         if((elemento->y+ steps*MAN_STEPS) + elemento->height/2 <= max_y){
             elemento->y = elemento->y + steps*MAN_STEPS;
         }
+        // pular
+    } else if(trajectory == 4){
+            elemento->vel_y = elemento->vel_y + steps*40;
+            elemento->y -= elemento->vel_y;
     }
 }
 void personagem_destroy(personagem *elemento){
