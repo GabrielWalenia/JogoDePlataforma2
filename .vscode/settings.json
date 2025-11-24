@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "inimigo.h": "c",
-        "bitmap.h": "c"
+        "bitmap.h": "c",
+        "allegro_audio.h": "c"
     }
 }

@@ -1,13 +1,5 @@
+
 /*
-
-Pos x
-gaw24@h41:~$ echo $((419/7))
-59
-
-pos y
-gaw24@h41:~$ echo $((718/12))
-59
-
 sprite 2
 x: 50
 y: 77
@@ -26,13 +18,14 @@ y: 77
 #include <allegro5/bitmap.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
+#include <math.h>
 
 #include "./recursos/personagem.h"	
 #include "./recursos/inimigo.h"
 #include "./recursos/joystick.h"
 #include "./recursos/background.h"
 
-#define BACKGROUND_FILE "./imagens/environment_forestbackground1-1.png"
+#define BACKGROUND_FILE "./imagens/bg2.jpg"
 #define PERSONAGEM_SPRITE "./imagens/ninja.png"
 
 #define X_SCREEN 800
@@ -42,9 +35,11 @@ y: 77
 #define MAX_ENEMYS 0
 #define GRAVIDADE 1
 #define VELOCIDADE 20
-#define BLOCK_SIZE 40
+#define BLOCK_SIZE 60
+#define CHAO 60
 
 background bg;
+
 
 void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
     char buffer;
@@ -55,35 +50,43 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
         return ;
     }
 
-    fseek(arquivo, 4, SEEK_SET);
-
     for(int i = 0; i<max_x; i++){
         for(int j = 0; j< max_y; j++){
             fread(&buffer, 1, 1, arquivo);
+            if(buffer == '\n'){
+                j--;
+                continue;
+            }
             map[i][j] = (int) buffer;
         }
     }
 
-    // for(int i = 0; i<max_x; i++){
-    //     for(int j = 0; j< max_y; j++){
-    //         printf("%d ", map[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+    for(int i = 0; i<max_x; i++){
+        for(int j = 0; j< max_y; j++){
+            printf("%d ", map[i][j]);
+        }
+        printf("\n");
+    }
 }
 
 void drawMap(int map [100][100], int max_x, int max_y){
 
     for(int i = 0; i<max_x; i++){
         for(int j = 0; j< max_y; j++){
-            if(map[i][j] == 48){
-                al_draw_filled_rectangle(i * BLOCK_SIZE, j * BLOCK_SIZE,
-                    i * BLOCK_SIZE + BLOCK_SIZE, j * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(0, 0, 255));
-            } else {
-                al_draw_filled_rectangle(i * BLOCK_SIZE, j * BLOCK_SIZE,
-                    i * BLOCK_SIZE + BLOCK_SIZE, j * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(0, 255, 0));
+            if(map[i][j] == 49){
+                /*al_draw_filled_rectangle(j * BLOCK_SIZE, i * BLOCK_SIZE,
+                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(0, 0, 255));
+            } else {*/
+                al_draw_filled_rectangle(j * BLOCK_SIZE , i * BLOCK_SIZE,
+                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(0, 255, 0));
+            } else if(map[i][j] == 50){
+                al_draw_filled_rectangle(j * BLOCK_SIZE , i * BLOCK_SIZE,
+                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(100, 0, 100));
+            } else if(map[i][j] == 51){
+                al_draw_filled_rectangle(j * BLOCK_SIZE , i * BLOCK_SIZE,
+                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(100, 100, 0));
             }
-        }
+        }   
     }
 }
 
@@ -115,6 +118,11 @@ int verificar_colisao(personagem *element_first, inimigo *element_second){
 
 }
 
+int verificar_colisao_mapa(personagem *element_first, int mapa[100][100]){
+
+    return 0;
+}
+
 void update_position(personagem *player_1 , inimigo **vetor_inimigos){
     
     bool jump = false;  
@@ -124,34 +132,36 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
 
     // movimenta para esquerda
     if (player_1->controle->left){
-        personagem_move(player_1, 1, 0, X_FASE, Y_SCREEN - 20);
+        personagem_move(player_1, 1, 0, X_FASE, Y_SCREEN - CHAO);
         // Se bater em algum inimigo movimenta para tras
         updateBackground(&bg, 1);
-        for(int i = 0; i < MAX_ENEMYS; i++)
-            if(verificar_colisao(player_1, vetor_inimigos[i]))
-                personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - 20);
+        //for(int i = 0; i < MAX_ENEMYS; i++)
+        //    if(verificar_colisao(player_1, vetor_inimigos[i]))
+        //        personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
     }
 
     if (player_1->controle->right){
-        personagem_move(player_1, 1, 1, X_FASE, Y_SCREEN  - 20);
+
+        personagem_move(player_1, 1, 1, X_FASE, Y_SCREEN  - CHAO);
         updateBackground(&bg, -1);
-        for(int i = 0; i < MAX_ENEMYS; i++)
-            if(verificar_colisao(player_1, vetor_inimigos[i]))
-                personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - 20);
+        //for(int i = 0; i < MAX_ENEMYS; i++)
+        //    if(verificar_colisao(player_1, vetor_inimigos[i]));
+        //        printf("Entrou no ifs\n");
+        //        personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
     }
     if (player_1->controle->up){
-        personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN  - 20);
+        personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN  - CHAO);
         for(int i = 0; i < MAX_ENEMYS; i++)
             if(verificar_colisao(player_1, vetor_inimigos[i]))
-                personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - 20);
+                personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - CHAO);
 
     }
 
     if (player_1->controle->down){
-        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN  - 20);
+        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN  - CHAO);
         for(int i = 0; i < MAX_ENEMYS; i++)
             if(verificar_colisao(player_1, vetor_inimigos[i]))
-                personagem_move(player_1, -1, 3, X_SCREEN, Y_SCREEN - 20);
+                personagem_move(player_1, -1, 3, X_SCREEN, Y_SCREEN - CHAO);
     }
 
     
@@ -167,13 +177,13 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
 
     player_1->y += player_1->vel_y;
 
-    if(player_1->y + player_1->height/2 >= Y_SCREEN-20)
+    if(player_1->y + player_1->height/2 >= Y_SCREEN-CHAO)
         jump = true;
     else
         jump = false;
 
     if(jump){
-        player_1->y = Y_SCREEN-20 - player_1->height/2;
+        player_1->y = Y_SCREEN-CHAO - player_1->height/2;
     }
     if (player_1->controle->jump && jump){
 
@@ -207,7 +217,7 @@ int main(){
 
     float cameraPosition[2] = {0, 0};
 
-    int loadCounterX = 0, loadCounterY = 0, mapSizeX = 10, mapSizeY = 10;
+    int loadCounterX = 0, loadCounterY = 0, mapSizeX = 10, mapSizeY = 30;
     int map[100][100];
 
 
@@ -220,17 +230,10 @@ int main(){
     ALLEGRO_FONT *font = al_load_ttf_font("./imagens/Freedom-10eM.ttf", 36, 0);
     ALLEGRO_DISPLAY *disp = al_create_display(X_SCREEN, Y_SCREEN);
 
-    // ALLEGRO_TRANSFORM camera;
+    ALLEGRO_TRANSFORM camera;
 
     // -----------------------------------
     // Iniciando a fila
-
-    // Imagens:
-    // ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);;
-    // if(!background){
-    //     printf("Falha em abrir o background!");
-    //     return 1;
-    // }
 
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
@@ -244,17 +247,16 @@ int main(){
     if (!player_1) return 1;
 
     for(int i = 0; i<MAX_ENEMYS; i++){
-        vetor_inimigos[i] = inimigo_create(77, 50, 1 + rand()%1280, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
+        vetor_inimigos[i] = inimigo_create(77, 50, 1 + rand()%1280, Y_SCREEN - 60 - 25, X_SCREEN, Y_SCREEN);
 
     }
-    // inimigo *enemy = inimigo_create(20, 20, X_SCREEN - 10, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
 
     ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
     
     // inicia o background
-    initBackground(&bg, 0, 0, 10, 0, X_SCREEN, Y_SCREEN, -1, 1, background);
-    loadMap("./mapas/mapa1.txt", map, mapSizeX, mapSizeY);
+    initBackground(&bg, 0, 0, 10, 0, 1065, 600, -1, 1, background);
+    loadMap("./mapas/fase1.txt", map, mapSizeX, mapSizeY);
 
     ALLEGRO_EVENT event;
 
@@ -282,21 +284,23 @@ int main(){
                 // Desenha o background e faz ele ir para trás
                 drawBackground(&bg);
                 // al_draw_bitmap(background,0,0, 0);
-                // al_clear_to_color(al_map_rgb(39, 104, 88));
-                // drawMap(map, mapSizeX, mapSizeY);
-                // atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
+                al_clear_to_color(al_map_rgb(39, 104, 88));
+                drawMap(map, mapSizeX, mapSizeY);
+
+                atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
                 
-                // al_identity_transform(&camera);
-                // al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
-                // al_scale_transform(&camera, scale, scale);
-                // al_use_transform(&camera);
+                al_identity_transform(&camera);
+                al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
+                al_scale_transform(&camera, scale, scale);
+                al_use_transform(&camera);
                 
                 //al_draw_bitmap(background, 0, 0, 0);
 
                 //desenha o personagem;
                 al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
-                al_draw_filled_rectangle(0, Y_SCREEN-20, X_SCREEN, Y_SCREEN, al_map_rgb(0, 255, 0));
-                
+                // al_draw_filled_rectangle(0, Y_SCREEN-20, X_SCREEN, Y_SCREEN, al_map_rgb(0, 255, 0));
+                    
+
                 // Desenha os inimigos
                 for(int i = 0; i<MAX_ENEMYS; i++){
 
@@ -306,13 +310,13 @@ int main(){
 
             // Desenhar o sprite na tela
             
-                if(player_1->controle->right){
+                if(player_1->controle->right && !player_1->controle->jump){
                     frame +=0.8f;
                     if(frame > 8){
                         frame -= 8;
                     }
                     al_draw_bitmap_region(skin, 50 * (int) frame, 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
-                } else if(player_1->controle->left) {
+                } else if(player_1->controle->left && !player_1->controle->jump) {
                     frame +=0.8f;
                     if(frame > 8){
                         frame -= 8;
@@ -325,11 +329,28 @@ int main(){
                         frame -= 4;
                     }
                     al_draw_bitmap_region(skin, 200 + 50 * (int) frame, 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
-                } else {
+                } else if(player_1->controle->jump && player_1->controle->right){
+                    
+                    frame += 0.4f;
+                    if(frame > 4){
+                        frame -= 4;
+                    }
+
+                    al_draw_bitmap_region(skin, 200 + 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+                }
+                else if(player_1->controle->jump && player_1->controle->left){
+                    
+                    frame += 0.4f;
+                    if(frame > 4){
+                        frame -= 4;
+                    }
+
+                    al_draw_bitmap_region(skin, 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+                }
+                else {
 
                     al_draw_bitmap_region(skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
                 }
-                
                 
                 al_flip_display();
             }
@@ -340,6 +361,7 @@ int main(){
             else if (event.keyboard.keycode == 83) joystick_right(player_1->controle);
             // else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
             // else if (event.keyboard.keycode == 85) joystick_down(player_1->controle);
+            //else if (event.keyboard.keycode == ALLEGRO_KEY_LCTRL) joystick_agachar(player_1->controle);
             else if(event.keyboard.keycode == ALLEGRO_KEY_ENTER) menu = false;
             else if(event.keyboard.keycode == ALLEGRO_KEY_SPACE) joystick_jump(player_1->controle);
             else if(event.keyboard.keycode == ALLEGRO_KEY_PAD_MINUS) scale-=0.2f;
