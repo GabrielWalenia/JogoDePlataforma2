@@ -30,18 +30,21 @@ y: 77
 #include "./recursos/personagem.h"	
 #include "./recursos/inimigo.h"
 #include "./recursos/joystick.h"
+#include "./recursos/background.h"
 
-#define BACKGROUND_FILE "./imagens/backgraund.png"
+#define BACKGROUND_FILE "./imagens/environment_forestbackground1-1.png"
 #define PERSONAGEM_SPRITE "./imagens/ninja.png"
 
-#define X_SCREEN 1280
-#define Y_SCREEN 720
+#define X_SCREEN 800
+#define Y_SCREEN 600
 #define X_FASE 1000000
 #define MAX_PULO 50
 #define MAX_ENEMYS 0
 #define GRAVIDADE 1
 #define VELOCIDADE 20
 #define BLOCK_SIZE 40
+
+background bg;
 
 void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
     char buffer;
@@ -116,13 +119,14 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
     
     bool jump = false;  
     int gravidade = GRAVIDADE;
-    int jumpSpeed = 15;
+    int jumpSpeed = 20;
 
 
     // movimenta para esquerda
     if (player_1->controle->left){
         personagem_move(player_1, 1, 0, X_FASE, Y_SCREEN - 20);
         // Se bater em algum inimigo movimenta para tras
+        updateBackground(&bg, 1);
         for(int i = 0; i < MAX_ENEMYS; i++)
             if(verificar_colisao(player_1, vetor_inimigos[i]))
                 personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - 20);
@@ -130,7 +134,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
 
     if (player_1->controle->right){
         personagem_move(player_1, 1, 1, X_FASE, Y_SCREEN  - 20);
-
+        updateBackground(&bg, -1);
         for(int i = 0; i < MAX_ENEMYS; i++)
             if(verificar_colisao(player_1, vetor_inimigos[i]))
                 personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - 20);
@@ -172,7 +176,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
         player_1->y = Y_SCREEN-20 - player_1->height/2;
     }
     if (player_1->controle->jump && jump){
-        printf("Entrou no if\n");
+
         player_1->vel_y = -jumpSpeed;
         jump = false;
     }
@@ -210,12 +214,13 @@ int main(){
     
     inimigo *vetor_inimigos[MAX_ENEMYS];
 
+
     ALLEGRO_TIMER *timer = al_create_timer(1.0/30.0);
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
     ALLEGRO_FONT *font = al_load_ttf_font("./imagens/Freedom-10eM.ttf", 36, 0);
-    ALLEGRO_DISPLAY *disp = al_create_display(1280, 720);
+    ALLEGRO_DISPLAY *disp = al_create_display(X_SCREEN, Y_SCREEN);
 
-    ALLEGRO_TRANSFORM camera;
+    // ALLEGRO_TRANSFORM camera;
 
     // -----------------------------------
     // Iniciando a fila
@@ -247,6 +252,8 @@ int main(){
     ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
     
+    // inicia o background
+    initBackground(&bg, 0, 0, 10, 0, X_SCREEN, Y_SCREEN, -1, 1, background);
     loadMap("./mapas/mapa1.txt", map, mapSizeX, mapSizeY);
 
     ALLEGRO_EVENT event;
@@ -271,17 +278,18 @@ int main(){
             }else{
                 // Atualiza a posicao;
                 update_position(player_1, vetor_inimigos);
-
-                // Desenha o background e faz ele ir para trás
-                // al_draw_bitmap(background,0,0,0);
-                al_clear_to_color(al_map_rgb(39, 104, 88));
-                // drawMap(map, mapSizeX, mapSizeY);
-                atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
                 
-                al_identity_transform(&camera);
-                al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
-                al_scale_transform(&camera, scale, scale);
-                al_use_transform(&camera);
+                // Desenha o background e faz ele ir para trás
+                drawBackground(&bg);
+                // al_draw_bitmap(background,0,0, 0);
+                // al_clear_to_color(al_map_rgb(39, 104, 88));
+                // drawMap(map, mapSizeX, mapSizeY);
+                // atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
+                
+                // al_identity_transform(&camera);
+                // al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
+                // al_scale_transform(&camera, scale, scale);
+                // al_use_transform(&camera);
                 
                 //al_draw_bitmap(background, 0, 0, 0);
 
