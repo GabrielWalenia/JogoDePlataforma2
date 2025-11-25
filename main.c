@@ -24,6 +24,7 @@ y: 77
 #include "./recursos/inimigo.h"
 #include "./recursos/joystick.h"
 #include "./recursos/background.h"
+#include "./recursos/obj.h"
 
 #define BACKGROUND_FILE "./imagens/bg2.jpg"
 #define PERSONAGEM_SPRITE "./imagens/ninja.png"
@@ -31,6 +32,8 @@ y: 77
 #define X_SCREEN 800
 #define Y_SCREEN 600
 #define X_FASE 1000000
+#define X_MAPA 10
+#define Y_MAPA 30
 #define MAX_PULO 50
 #define MAX_ENEMYS 0
 #define GRAVIDADE 1
@@ -39,7 +42,7 @@ y: 77
 #define CHAO 60
 
 background bg;
-
+obj p = {4, 11, 500, 50, BLOCK_SIZE, BLOCK_SIZE}, bloco[10][30];
 
 void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
     char buffer;
@@ -63,30 +66,24 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
 
     for(int i = 0; i<max_x; i++){
         for(int j = 0; j< max_y; j++){
-            printf("%d ", map[i][j]);
-        }
-        printf("\n");
+            if(map[i][j] == 49){
+
+                bloco[i][j].y = i * BLOCK_SIZE;
+                bloco[i][j].x = j * BLOCK_SIZE;
+                bloco[i][j].w = BLOCK_SIZE;
+                bloco[i][j].h = BLOCK_SIZE;
+                bloco[i][j].wy = 0;
+            }
+        }   
     }
 }
 
 void drawMap(int map [100][100], int max_x, int max_y){
 
-    for(int i = 0; i<max_x; i++){
-        for(int j = 0; j< max_y; j++){
-            if(map[i][j] == 49){
-                /*al_draw_filled_rectangle(j * BLOCK_SIZE, i * BLOCK_SIZE,
-                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(0, 0, 255));
-            } else {*/
-                al_draw_filled_rectangle(j * BLOCK_SIZE , i * BLOCK_SIZE,
-                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(0, 255, 0));
-            } else if(map[i][j] == 50){
-                al_draw_filled_rectangle(j * BLOCK_SIZE , i * BLOCK_SIZE,
-                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(100, 0, 100));
-            } else if(map[i][j] == 51){
-                al_draw_filled_rectangle(j * BLOCK_SIZE , i * BLOCK_SIZE,
-                    j * BLOCK_SIZE + BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE, al_map_rgb(100, 100, 0));
-            }
-        }   
+    for(int i = 0; i< 10; i++){
+        for(int j = 0; j < 30; j++){
+            al_draw_filled_rectangle(bloco[i][j].x - bloco[i][j].w/2, bloco[i][j].y - bloco[i][j].h/2, bloco[i][j].x + bloco[i][j].w/2, bloco[i][j].y + bloco[i][j].h/2, al_map_rgb(0, 255, 0));
+        }
     }
 }
 
@@ -118,8 +115,32 @@ int verificar_colisao(personagem *element_first, inimigo *element_second){
 
 }
 
-int verificar_colisao_mapa(personagem *element_first, int mapa[100][100]){
+int verificar_colisao_mapa(personagem *player){
 
+    for(int i = 0; i < X_MAPA; i++){
+        for(int j = 0; j< Y_MAPA; j++){
+            // Colisao pela direita do personagem
+            if(( bloco[i][j].x- bloco[i][j].w/2 >= player->x-player->width/2) && (player->x+player->width/2 >=  bloco[i][j].x- bloco[i][j].w/2)){
+                return 1;
+            }
+            // Colisao pela esquerda do personagem
+            if((player->x-player->width/2 >= bloco[i][j].x - bloco[i][j].w/2) && (bloco[i][j].x+bloco[i][j].w/2 >= player->x-player->width/2)){
+
+    
+                return 2;
+            }
+            //verifica colisao em cima do personagem
+            if((bloco[i][j].y-bloco[i][j].y/2 >= player->y - player->height/2) && (player->y+player->height/2 >= bloco[i][j].y-bloco[i][j].h/2)){
+
+            
+                return 3;
+            }
+            // Colisao em baixo do personagem
+            if((player->y-player->height/2 >= bloco[i][j].y-bloco[i][j].h/2) && (bloco[i][j].y+bloco[i][j].h/2 >= player->y-player->height/2)){
+                return 4;
+            }
+        }
+    }
     return 0;
 }
 
@@ -135,25 +156,33 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
         personagem_move(player_1, 1, 0, X_FASE, Y_SCREEN - CHAO);
         // Se bater em algum inimigo movimenta para tras
         updateBackground(&bg, 1);
-        //for(int i = 0; i < MAX_ENEMYS; i++)
-        //    if(verificar_colisao(player_1, vetor_inimigos[i]))
-        //        personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
+        for(int i = 0; i < MAX_ENEMYS; i++)
+           if(verificar_colisao(player_1, vetor_inimigos[i]))
+               personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
+        
+        if(verificar_colisao_mapa(player_1) == 2)
+            personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
     }
 
     if (player_1->controle->right){
 
         personagem_move(player_1, 1, 1, X_FASE, Y_SCREEN  - CHAO);
         updateBackground(&bg, -1);
-        //for(int i = 0; i < MAX_ENEMYS; i++)
-        //    if(verificar_colisao(player_1, vetor_inimigos[i]));
-        //        printf("Entrou no ifs\n");
-        //        personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
+        for(int i = 0; i < MAX_ENEMYS; i++)
+           if(verificar_colisao(player_1, vetor_inimigos[i]))
+               personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
+        
+        if(verificar_colisao_mapa(player_1) == 1)
+            personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
     }
     if (player_1->controle->up){
         personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN  - CHAO);
         for(int i = 0; i < MAX_ENEMYS; i++)
             if(verificar_colisao(player_1, vetor_inimigos[i]))
                 personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - CHAO);
+        
+        if(verificar_colisao_mapa(player_1) == 4)
+            personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - CHAO);
 
     }
 
@@ -162,6 +191,8 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
         for(int i = 0; i < MAX_ENEMYS; i++)
             if(verificar_colisao(player_1, vetor_inimigos[i]))
                 personagem_move(player_1, -1, 3, X_SCREEN, Y_SCREEN - CHAO);
+        if(verificar_colisao_mapa(player_1) == 3)
+            personagem_move(player_1, -1, 3, X_FASE, Y_SCREEN - CHAO);
     }
 
     
@@ -181,6 +212,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
         jump = true;
     else
         jump = false;
+    
 
     if(jump){
         player_1->y = Y_SCREEN-CHAO - player_1->height/2;
@@ -239,6 +271,8 @@ int main(){
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
     al_set_window_title(disp, "Game");
+
+
     // -----------------------------------
     // Elementos
 
@@ -254,6 +288,7 @@ int main(){
     ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
     
+
     // inicia o background
     initBackground(&bg, 0, 0, 10, 0, 1065, 600, -1, 1, background);
     loadMap("./mapas/fase1.txt", map, mapSizeX, mapSizeY);
@@ -285,6 +320,7 @@ int main(){
                 drawBackground(&bg);
                 // al_draw_bitmap(background,0,0, 0);
                 al_clear_to_color(al_map_rgb(39, 104, 88));
+
                 drawMap(map, mapSizeX, mapSizeY);
 
                 atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
