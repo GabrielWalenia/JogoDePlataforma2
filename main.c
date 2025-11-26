@@ -6,6 +6,13 @@ y: 77
 */
 
 
+/*
+Cobra
+x: 96
+y: 72
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -25,6 +32,7 @@ y: 77
 #include "./recursos/joystick.h"
 #include "./recursos/background.h"
 #include "./recursos/obj.h"
+#include "./recursos/serpente.h"
 
 #define BACKGROUND_FILE "./imagens/bg2.jpg"
 #define PERSONAGEM_SPRITE "./imagens/ninja.png"
@@ -33,17 +41,17 @@ y: 77
 #define Y_SCREEN 600
 #define X_FASE 1000000
 #define X_MAPA 10
-#define Y_MAPA 30
+#define Y_MAPA 50
 #define MAX_PULO 50
 #define MAX_ENEMYS 0
 #define GRAVIDADE 1
 #define VELOCIDADE 20
 #define BLOCK_SIZE 60
 #define CHAO 60
-#define OUT 10000
+#define OUT -512
 
 background bg;
-obj p = {4, 11, 500, 50, BLOCK_SIZE, BLOCK_SIZE}, bloco[10][30];
+obj p = {4, 11, 500, 50, BLOCK_SIZE, BLOCK_SIZE}, bloco[X_MAPA][Y_MAPA];
 
 
 void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
@@ -75,9 +83,21 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
                 bloco[i][j].w = BLOCK_SIZE;
                 bloco[i][j].h = BLOCK_SIZE;
                 bloco[i][j].wy = 0;
+                bloco[i][j].dano = false;
+                bloco[i][j].sprite = al_load_bitmap("./imagens/Pedaco_de_grama.png");
+            } else if(map[i][j] == 51){
+                bloco[i][j].y = i * BLOCK_SIZE;
+                bloco[i][j].x = j * BLOCK_SIZE;
+                bloco[i][j].w = BLOCK_SIZE;
+                bloco[i][j].h = BLOCK_SIZE;
+                bloco[i][j].wy = 0;
+                bloco[i][j].dano = true;
+                bloco[i][j].sprite = al_load_bitmap("./imagens/espinhos.png");
+
             } else {
                 bloco[i][j].y = OUT;
                 bloco[i][j].x = OUT;
+                bloco[i][j].sprite = al_load_bitmap("./imagens/Pedaco_de_grama.png");;
 
             }
         }   
@@ -86,10 +106,10 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
 
 void drawMap(int map [100][100], int max_x, int max_y, ALLEGRO_BITMAP *sprite){
 
-    for(int i = 0; i< 10; i++){
-        for(int j = 0; j < 30; j++){
+    for(int i = 0; i< max_x; i++){
+        for(int j = 0; j < max_y; j++){
             //al_draw_filled_rectangle(bloco[i][j].x - bloco[i][j].w/2, bloco[i][j].y - bloco[i][j].h/2, bloco[i][j].x + bloco[i][j].w/2, bloco[i][j].y + bloco[i][j].h/2, al_map_rgb(0, 255, 0));
-            al_draw_bitmap(sprite, bloco[i][j].x - bloco[i][j].w/2,bloco[i][j].y - bloco[i][j].h/2, 0);
+            al_draw_bitmap(bloco[i][j].sprite, bloco[i][j].x - bloco[i][j].w/2,bloco[i][j].y - bloco[i][j].h/2, 0);
         }
     }
 }
@@ -121,7 +141,7 @@ int verificar_colisao(int n1_x, int n1_y, int n1_w, int n1_h,
 
 
 
-void update_position(personagem *player_1 , inimigo **vetor_inimigos){
+void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *vetor_serpentes[2]){
     
     bool jump = false;  
     int gravidade = GRAVIDADE;
@@ -170,6 +190,15 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
                 // player_1->y = bloco[i][j].y - player_1->height;
                 jump = true;
             }
+
+            // Verifica a colisão da serpente
+            for(int w =0; w<2; w++){
+                if(verificar_colisao(vetor_serpentes[w]->x + 10, vetor_serpentes[w]->y+20, vetor_serpentes[w]->width, vetor_serpentes[w]->height,
+                    bloco[i][j].x, bloco[i][j].y, bloco[i][j].w, bloco[i][j].h)){
+
+                    vetor_serpentes[w]->jump = true;
+                }
+            }
         }
     }
 
@@ -185,8 +214,17 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos){
     else 
         player_1->vel_y = 0;
 
+    //gravidade para as serpentes
+    for(int w = 0; w<2; w++){
+        vetor_serpentes[w]->y += vetor_serpentes[w]->vel_y;
 
-
+        if(!vetor_serpentes[w]->jump)
+            vetor_serpentes[w]->vel_y += gravidade;
+        else 
+            vetor_serpentes[w]->vel_y = 0;
+        
+        
+    }
 
 }
 
@@ -207,19 +245,21 @@ int main(){
     // Variáveis
 
     bool menu = true;
-    float frame = 0.f, scale = 1.0f;
+    float frame = 0.f, frame2 = 0.f,scale = 1.0f;
     int pos_x = 0, pos_y = 0;
     int current_frame_y = 0;
 
 
     float cameraPosition[2] = {0, 0};
 
-    int loadCounterX = 0, loadCounterY = 0, mapSizeX = 10, mapSizeY = 30;
+    int loadCounterX = 0, loadCounterY = 0, mapSizeX = X_MAPA, mapSizeY = Y_MAPA;
     int map[100][100];
 
 
     
     inimigo *vetor_inimigos[MAX_ENEMYS];
+    serpente *vetor_serpentes[2];
+
 
 
     ALLEGRO_TIMER *timer = al_create_timer(1.0/30.0);
@@ -250,9 +290,14 @@ int main(){
 
     }
 
+    // Vetor de serpentes
+
+    vetor_serpentes[0] = serpente_create(72, 96, 350, Y_SCREEN/2, X_SCREEN, Y_SCREEN, al_load_bitmap("./imagens/snake.png"));
+    vetor_serpentes[1] = serpente_create(72, 96, 720, Y_SCREEN/2, X_SCREEN, Y_SCREEN, al_load_bitmap("./imagens/snake.png"));
+
     ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
-    ALLEGRO_BITMAP *bloco = al_load_bitmap("./imagens/Pedaco_de_grama.png");
+    
     
 
     // inicia o background
@@ -279,82 +324,102 @@ int main(){
                 al_flip_display();
             
             }else{
-                // Atualiza a posicao;
-                update_position(player_1, vetor_inimigos);
-                
-                // Desenha o background e faz ele ir para trás
-                drawBackground(&bg);
-                // al_draw_bitmap(background,0,0, 0);
-                al_clear_to_color(al_map_rgb(39, 104, 88));
 
-                drawMap(map, mapSizeX, mapSizeY, bloco);
-
-                atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
+                if(verificar_vida(player_1)){
+                    // Atualiza a posicao;
+                    update_position(player_1, vetor_inimigos, vetor_serpentes);
                 
-                al_identity_transform(&camera);
-                al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
-                al_scale_transform(&camera, scale, scale);
-                al_use_transform(&camera);
+                    // Desenha o background e faz ele ir para trás
+                    drawBackground(&bg);
+                    // al_draw_bitmap(background,0,0, 0);
+                    al_clear_to_color(al_map_rgb(39, 104, 88));
+
+                    drawMap(map, mapSizeX, mapSizeY, NULL);
+
+                    atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
+                
+                    al_identity_transform(&camera);
+                    al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
+                    al_scale_transform(&camera, scale, scale);
+                    al_use_transform(&camera);
                 
                 //al_draw_bitmap(background, 0, 0, 0);
 
-                //desenha o personagem;
-                al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
-                // al_draw_filled_rectangle(0, Y_SCREEN-20, X_SCREEN, Y_SCREEN, al_map_rgb(0, 255, 0));
+                    //desenha o personagem;
+                    al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
+                    // al_draw_filled_rectangle(0, Y_SCREEN-20, X_SCREEN, Y_SCREEN, al_map_rgb(0, 255, 0));
                     
 
-                // Desenha os inimigos
-                for(int i = 0; i<MAX_ENEMYS; i++){
+                    // Desenha os inimigos
+                    for(int i = 0; i<MAX_ENEMYS; i++){
 
-                    al_draw_filled_rectangle(vetor_inimigos[i]->x-vetor_inimigos[i]->width/2, 
-                        vetor_inimigos[i]->y-vetor_inimigos[i]->height/2, vetor_inimigos[i]->x+vetor_inimigos[i]->width/2, vetor_inimigos[i]->y+vetor_inimigos[i]->height/2, al_map_rgb(0, 0, 255));
-                }
+                        al_draw_filled_rectangle(vetor_inimigos[i]->x-vetor_inimigos[i]->width/2, 
+                            vetor_inimigos[i]->y-vetor_inimigos[i]->height/2, vetor_inimigos[i]->x+vetor_inimigos[i]->width/2, vetor_inimigos[i]->y+vetor_inimigos[i]->height/2, al_map_rgb(0, 0, 255));
+                    }
 
-            // Desenhar o sprite na tela
+                // Desenhar o sprite na tela
             
-                if(player_1->controle->right && !player_1->controle->jump){
-                    frame +=0.8f;
-                    if(frame > 8){
-                        frame -= 8;
-                    }
-                    al_draw_bitmap_region(skin, 50 * (int) frame, 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
-                } else if(player_1->controle->left && !player_1->controle->jump) {
-                    frame +=0.8f;
-                    if(frame > 8){
-                        frame -= 8;
-                    }
-                    al_draw_bitmap_region(skin, 50 * (int) frame, 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+                    if(player_1->controle->right && !player_1->controle->jump){
+                        frame +=0.8f;
+                        if(frame > 8){
+                            frame -= 8;
+                        }
+                        al_draw_bitmap_region(skin, 50 * (int) frame, 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
+                    } else if(player_1->controle->left && !player_1->controle->jump) {
+                        frame +=0.8f;
+                        if(frame > 8){
+                            frame -= 8;
+                        }
+                        al_draw_bitmap_region(skin, 50 * (int) frame, 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
             
-                }else if(player_1->controle->up) {
-                    frame += 0.4f;
-                    if(frame > 4){
-                        frame -= 4;
+                    }else if(player_1->controle->up) {
+                        frame += 0.4f;
+                        if(frame > 4){
+                            frame -= 4;
+                        }
+                        al_draw_bitmap_region(skin, 200 + 50 * (int) frame, 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+                    } else if(player_1->controle->jump && player_1->controle->right){
+                        
+                        frame += 0.4f;
+                        if(frame > 4){
+                            frame -= 4;
+                        }
+
+                        al_draw_bitmap_region(skin, 200 + 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
                     }
-                    al_draw_bitmap_region(skin, 200 + 50 * (int) frame, 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
-                } else if(player_1->controle->jump && player_1->controle->right){
-                    
-                    frame += 0.4f;
-                    if(frame > 4){
-                        frame -= 4;
+                    else if(player_1->controle->jump && player_1->controle->left){
+                        
+                        frame += 0.4f;
+                        if(frame > 4){
+                            frame -= 4;
+                        }
+
+                        al_draw_bitmap_region(skin, 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+                    }
+                    else {
+
+                        al_draw_bitmap_region(skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
                     }
 
-                    al_draw_bitmap_region(skin, 200 + 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
-                }
-                else if(player_1->controle->jump && player_1->controle->left){
-                    
-                    frame += 0.4f;
-                    if(frame > 4){
-                        frame -= 4;
+                    frame2 += 0.03f;
+                    if(frame2 > 3){
+                        frame2 -= 3;
                     }
+                    // Desenha o sprite da serpente;
+                    for(int w =0; w<2; w++){
+                        al_draw_filled_rectangle(vetor_serpentes[w]->x-vetor_serpentes[w]->width/2, 
+                           vetor_serpentes[w]->y-vetor_serpentes[w]->height/2, vetor_serpentes[w]->x+vetor_serpentes[w]->width/2, vetor_serpentes[w]->y+vetor_serpentes[w]->height/2, al_map_rgb(0, 0, 255));
+                        al_draw_bitmap_region(vetor_serpentes[w]->skin, 96 * (int) frame2, 0, 96, 72, vetor_serpentes[w]->x - vetor_serpentes[w]->width/ 2, vetor_serpentes[w]->y - vetor_serpentes[w]->height /2, 0);
+                    }
+                    al_flip_display();
+                } else{
+                    al_clear_to_color(al_map_rgb(0, 0, 0));
+                    al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2, 0, "GAME OVER");
+                    al_flip_display();
+                    al_rest(2.0);
+                    break;
 
-                    al_draw_bitmap_region(skin, 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
                 }
-                else {
-
-                    al_draw_bitmap_region(skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
-                }
-                
-                al_flip_display();
             }
     
         }else if ((event.type == 10) || (event.type == 12)){
@@ -381,7 +446,16 @@ int main(){
             break;
     }
 
+    
+    for(int i = 0; i<X_MAPA; i++){
+        for(int j = 0; j< Y_MAPA; j++){
+            al_destroy_bitmap(bloco[i][j].sprite);
+        }
+    }
 
+    for(int i = 0; i<2; i++){
+        serpente_destroy(vetor_serpentes[i]);
+    }
 
     al_destroy_bitmap(skin);
     al_destroy_bitmap(background);

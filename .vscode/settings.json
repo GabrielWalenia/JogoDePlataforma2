@@ -2,6 +2,7 @@
     "files.associations": {
         "inimigo.h": "c",
         "bitmap.h": "c",
-        "allegro_audio.h": "c"
+        "allegro_audio.h": "c",
+        "joystick.h": "c"
     }
 }

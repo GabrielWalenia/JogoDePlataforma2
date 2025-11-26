@@ -55,3 +55,4 @@ void inimigo_move(inimigo *elemento,  int steps, char trajectory, int max_x, int
 void inimigo_destroy(inimigo *elemento){
     free(elemento);
 }
+

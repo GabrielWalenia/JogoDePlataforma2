@@ -70,3 +70,13 @@ void personagem_destroy(personagem *elemento){
     joystick_destroy(elemento->controle);
     free(elemento);
 }
+
+bool verificar_vida(personagem *elemento){
+    if(elemento->hp <= 0){
+        return false;
+    }
+    if(elemento->y - elemento->height/2 > 650){
+        return false;
+    }
+    return true;
+}
