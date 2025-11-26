@@ -40,9 +40,11 @@ y: 77
 #define VELOCIDADE 20
 #define BLOCK_SIZE 60
 #define CHAO 60
+#define OUT 10000
 
 background bg;
 obj p = {4, 11, 500, 50, BLOCK_SIZE, BLOCK_SIZE}, bloco[10][30];
+
 
 void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
     char buffer;
@@ -73,16 +75,21 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
                 bloco[i][j].w = BLOCK_SIZE;
                 bloco[i][j].h = BLOCK_SIZE;
                 bloco[i][j].wy = 0;
+            } else {
+                bloco[i][j].y = OUT;
+                bloco[i][j].x = OUT;
+
             }
         }   
     }
 }
 
-void drawMap(int map [100][100], int max_x, int max_y){
+void drawMap(int map [100][100], int max_x, int max_y, ALLEGRO_BITMAP *sprite){
 
     for(int i = 0; i< 10; i++){
         for(int j = 0; j < 30; j++){
-            al_draw_filled_rectangle(bloco[i][j].x - bloco[i][j].w/2, bloco[i][j].y - bloco[i][j].h/2, bloco[i][j].x + bloco[i][j].w/2, bloco[i][j].y + bloco[i][j].h/2, al_map_rgb(0, 255, 0));
+            //al_draw_filled_rectangle(bloco[i][j].x - bloco[i][j].w/2, bloco[i][j].y - bloco[i][j].h/2, bloco[i][j].x + bloco[i][j].w/2, bloco[i][j].y + bloco[i][j].h/2, al_map_rgb(0, 255, 0));
+            al_draw_bitmap(sprite, bloco[i][j].x - bloco[i][j].w/2,bloco[i][j].y - bloco[i][j].h/2, 0);
         }
     }
 }
@@ -104,125 +111,83 @@ void atualizarCamera(float *cameraPosition, float x, float y, int width, int hei
         }
 }
 
-int verificar_colisao(personagem *element_first, inimigo *element_second){
+int verificar_colisao(int n1_x, int n1_y, int n1_w, int n1_h,
+    int n2_x, int n2_y, int n2_w, int n2_h){
     
-    if ((((element_second->y-element_second->height/2 >= element_first->y-element_first->height/2) && (element_first->y+element_first->height/2 >= element_second->y-element_second->height/2)) || 
-    	((element_first->y-element_first->height/2 >= element_second->y-element_second->height/2) && (element_second->y+element_second->height/2 >= element_first->y-element_first->height/2))) && 
-        (((element_second->x-element_second->width/2 >= element_first->x-element_first->width/2) && (element_first->x+element_first->width/2 >= element_second->x-element_second->width/2)) ||
-    	((element_first->x-element_first->width/2 >= element_second->x-element_second->width/2) && (element_second->x+element_second->width/2 >= element_first->x-element_first->width/2)))) return 1;	
-
-    else return 0;
-
-}
-
-int verificar_colisao_mapa(personagem *player){
-
-    for(int i = 0; i < X_MAPA; i++){
-        for(int j = 0; j< Y_MAPA; j++){
-            // Colisao pela direita do personagem
-            if(( bloco[i][j].x- bloco[i][j].w/2 >= player->x-player->width/2) && (player->x+player->width/2 >=  bloco[i][j].x- bloco[i][j].w/2)){
-                return 1;
-            }
-            // Colisao pela esquerda do personagem
-            if((player->x-player->width/2 >= bloco[i][j].x - bloco[i][j].w/2) && (bloco[i][j].x+bloco[i][j].w/2 >= player->x-player->width/2)){
-
-    
-                return 2;
-            }
-            //verifica colisao em cima do personagem
-            if((bloco[i][j].y-bloco[i][j].y/2 >= player->y - player->height/2) && (player->y+player->height/2 >= bloco[i][j].y-bloco[i][j].h/2)){
-
-            
-                return 3;
-            }
-            // Colisao em baixo do personagem
-            if((player->y-player->height/2 >= bloco[i][j].y-bloco[i][j].h/2) && (bloco[i][j].y+bloco[i][j].h/2 >= player->y-player->height/2)){
-                return 4;
-            }
-        }
-    }
+    if(n1_x + n1_w > n2_x && n1_x < n2_x + n2_w && n1_y + n1_h > n2_y && n1_y < n2_y + n2_h)
+        return 1;
     return 0;
 }
+
+
 
 void update_position(personagem *player_1 , inimigo **vetor_inimigos){
     
     bool jump = false;  
     int gravidade = GRAVIDADE;
-    int jumpSpeed = 20;
+    int jumpSpeed = 15;
 
 
     // movimenta para esquerda
     if (player_1->controle->left){
-        personagem_move(player_1, 1, 0, X_FASE, Y_SCREEN - CHAO);
-        // Se bater em algum inimigo movimenta para tras
-        updateBackground(&bg, 1);
-        for(int i = 0; i < MAX_ENEMYS; i++)
-           if(verificar_colisao(player_1, vetor_inimigos[i]))
-               personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
+        personagem_move(player_1, 1, 0, X_FASE, Y_SCREEN);
         
-        if(verificar_colisao_mapa(player_1) == 2)
-            personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
+        // for(int i = 0; i < X_MAPA; i++){
+        //     for(int j = 0; j< Y_MAPA; j++){
+        //         if(player_1->x - player_1->width/2 <= bloco[i][j].x + bloco[i][j].w/2 && player_1->y + player_1->height/2 >= bloco[i][j].y - bloco[i][j].h/2){
+        //             printf("Entrou no if\n");
+        //             personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - CHAO);
+        //         }
+        //     }
+            // }
+
     }
 
     if (player_1->controle->right){
 
-        personagem_move(player_1, 1, 1, X_FASE, Y_SCREEN  - CHAO);
-        updateBackground(&bg, -1);
-        for(int i = 0; i < MAX_ENEMYS; i++)
-           if(verificar_colisao(player_1, vetor_inimigos[i]))
-               personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
-        
-        if(verificar_colisao_mapa(player_1) == 1)
-            personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
+        personagem_move(player_1, 1, 1, X_FASE, Y_SCREEN);
+        // for(int i = 0; i < X_MAPA; i++){
+        //     for(int j = 0; j< Y_MAPA; j++){
+        //         if(player_1->x + player_1->width/2 >= bloco[i][j].x - bloco[i][j].w/2 && player_1->y + player_1->height/2 >= bloco[i][j].y - bloco[i][j].h/2){
+ 
+        //             personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - CHAO);
+        //         }
+        //     }
+        // }
     }
     if (player_1->controle->up){
-        personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN  - CHAO);
-        for(int i = 0; i < MAX_ENEMYS; i++)
-            if(verificar_colisao(player_1, vetor_inimigos[i]))
-                personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - CHAO);
-        
-        if(verificar_colisao_mapa(player_1) == 4)
-            personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - CHAO);
-
+        personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN);
     }
 
     if (player_1->controle->down){
-        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN  - CHAO);
-        for(int i = 0; i < MAX_ENEMYS; i++)
-            if(verificar_colisao(player_1, vetor_inimigos[i]))
-                personagem_move(player_1, -1, 3, X_SCREEN, Y_SCREEN - CHAO);
-        if(verificar_colisao_mapa(player_1) == 3)
-            personagem_move(player_1, -1, 3, X_FASE, Y_SCREEN - CHAO);
+        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN);
     }
 
-    
-
-    for(int i = 0; i<MAX_ENEMYS; i++){
-        inimigo_move(vetor_inimigos[i], 0, 0, X_SCREEN, Y_SCREEN);
+    for(int i = 0; i < X_MAPA; i++){
+        for(int j = 0; j< Y_MAPA; j++){
+            if(verificar_colisao(player_1->x + 10, player_1->y+20, player_1->width, player_1->height,
+                bloco[i][j].x, bloco[i][j].y, bloco[i][j].w, bloco[i][j].h)){
+                // player_1->y = bloco[i][j].y - player_1->height;
+                jump = true;
+            }
+        }
     }
+
+    if (player_1->controle->jump && jump){
+        player_1->vel_y = -jumpSpeed;
+        jump = false;
+    }
+
+    player_1->y += player_1->vel_y;
 
     if(!jump)
         player_1->vel_y += gravidade;
     else 
         player_1->vel_y = 0;
 
-    player_1->y += player_1->vel_y;
 
-    if(player_1->y + player_1->height/2 >= Y_SCREEN-CHAO)
-        jump = true;
-    else
-        jump = false;
-    
 
-    if(jump){
-        player_1->y = Y_SCREEN-CHAO - player_1->height/2;
-    }
-    if (player_1->controle->jump && jump){
 
-        player_1->vel_y = -jumpSpeed;
-        jump = false;
-    }
-    // printf("%d\n", jump);
 }
 
 
@@ -287,6 +252,7 @@ int main(){
 
     ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
+    ALLEGRO_BITMAP *bloco = al_load_bitmap("./imagens/Pedaco_de_grama.png");
     
 
     // inicia o background
@@ -321,7 +287,7 @@ int main(){
                 // al_draw_bitmap(background,0,0, 0);
                 al_clear_to_color(al_map_rgb(39, 104, 88));
 
-                drawMap(map, mapSizeX, mapSizeY);
+                drawMap(map, mapSizeX, mapSizeY, bloco);
 
                 atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
                 
