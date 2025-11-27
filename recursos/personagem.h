@@ -10,6 +10,7 @@
 #include "inimigo.h"
 #include "serpente.h"
 #include "bullet.h"
+#include "torre.h"
 
 #define MAN_STEPS 10
 #define GRAVITY 10
@@ -35,7 +36,7 @@ personagem* personagem_create(int hp, int height, int width, float x, float y,
     int max_x, int max_y);
 void personagem_move(personagem *elemento,  int steps, char trajectory, int max_x, int max_y);
 void personagem_destroy(personagem *elemento);
-bool verificar_vida(personagem *elemento);
+int verificar_morte(personagem *vitima, torre *tower);
 void animacao(personagem *player_1, serpente *vetor_serpentes[2], float *frame, float *frame2);
 
 #endif

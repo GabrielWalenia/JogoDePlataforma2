@@ -78,14 +78,35 @@ void personagem_destroy(personagem *elemento){
     free(elemento);
 }
 
-bool verificar_morte(personagem *elemento){
-    if(elemento->hp <= 0){
-        return true;
+int verificar_morte(personagem *vitima, torre *tower){
+    bullet *previous = NULL;
+    for(bullet *index = (bullet *)  tower->gun->shots; index != NULL; index = (bullet *) index->next){
+        if((index->x >= vitima->x - vitima->width/2) && (index->x <= vitima->x + vitima->width/2) && 
+        (index->y >= vitima->y - vitima->height/2) && (index->y <= vitima->y + vitima->height/2)){
+            
+            if(vitima->hp){
+                
+                vitima->hp--;
+                if(previous){
+                    previous->next = index->next;
+                    bullet_destroy(index);
+                    index = (bullet *) previous->next;
+                } else {
+                    tower->gun->shots = (bullet *) index->next;
+                    bullet_destroy(index);
+                    index = tower->gun->shots;
+
+                }
+                return 0;
+            } else {
+                return 1;
+            }
+
+        }
+        previous = index;
     }
-    if(elemento->y - elemento->height/2 > 650){
-        return true;
-    }
-    return false;
+    return 0;
+
 }
 
 void animacao(personagem *player_1, serpente *vetor_serpentes[2], float *frame, float *frame2){

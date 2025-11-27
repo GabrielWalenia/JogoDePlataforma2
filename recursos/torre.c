@@ -22,7 +22,6 @@ torre *torre_create(int x, int y, int width, int height, int dir){
 void torre_shot(torre *elemento){
     bullet *shot;
     // 0 atira para a esquerda e 1 para a direita
-    printf("%d\n", elemento->y/2);
     if(!elemento->dir) 
         shot = pistol_shot(elemento->x - elemento->width/2, elemento->y, elemento->dir, elemento->gun);
     else if (elemento->dir == 1) 

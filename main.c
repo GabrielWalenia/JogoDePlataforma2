@@ -154,6 +154,7 @@ void update_bullets(torre *tower){
             index->x += BULLET_MOVE;
 
         if(index->x < 0){
+
             if(previous){
                 previous->next = index->next;
                 bullet_destroy(index);
@@ -176,7 +177,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
     bool jump = false;  
     int gravidade = GRAVIDADE;
     int jumpSpeed = 15;
-
+    int kill = 0;
 
     // movimenta para esquerda
     if (player_1->controle->left){
@@ -362,6 +363,7 @@ int main(){
     // Jogo
 
     while(1){
+
         al_wait_for_event(queue, &event);
 
         if(event.type == 30){
@@ -376,7 +378,7 @@ int main(){
                     
             }else{
 
-                if(!verificar_vida(player_1)){
+                if(!verificar_morte(player_1, tower)){
                     // Atualiza a posicao;
                     update_position(player_1, vetor_inimigos, vetor_serpentes);
                 
