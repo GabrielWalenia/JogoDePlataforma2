@@ -33,6 +33,9 @@ y: 72
 #include "./recursos/background.h"
 #include "./recursos/obj.h"
 #include "./recursos/serpente.h"
+#include "./recursos/bullet.h"
+#include "./recursos/torre.h"
+#include "./recursos/pistol.h"
 
 #define BACKGROUND_FILE "./imagens/bg2.jpg"
 #define PERSONAGEM_SPRITE "./imagens/ninja.png"
@@ -114,10 +117,6 @@ void drawMap(int map [100][100], int max_x, int max_y, ALLEGRO_BITMAP *sprite){
     }
 }
 
-void animacao(const char *file, personagem *player_1, int tipo){
-
-
-}
 
 void atualizarCamera(float *cameraPosition, float x, float y, int width, int height){
         cameraPosition[0] = -( X_SCREEN / 2) + (x + width/2) ;
@@ -131,15 +130,46 @@ void atualizarCamera(float *cameraPosition, float x, float y, int width, int hei
         }
 }
 
+
 int verificar_colisao(int n1_x, int n1_y, int n1_w, int n1_h,
     int n2_x, int n2_y, int n2_w, int n2_h){
     
-    if(n1_x + n1_w > n2_x && n1_x < n2_x + n2_w && n1_y + n1_h > n2_y && n1_y < n2_y + n2_h)
-        return 1;
-    return 0;
+    //if(n1_x + n1_w > n2_x && n1_x < n2_x + n2_w && n1_y + n1_h > n2_y && n1_y < n2_y + n2_h)
+    //    return 1;
+
+    if ((((n2_y-n2_h/2 >= n1_y-n1_y/2) && (n1_y+n1_h/2 >= n2_y-n2_h/2)) ||
+		((n1_y-n1_h/2 >= n2_y-n2_h/2) && (n2_y+n2_h/2 >= n1_y-n1_h/2))) && 
+		(((n2_x-n2_w/2 >= n1_x-n1_w/2) && (n1_x+n1_w/2 >= n2_x-n2_w/2)) || 	
+		((n1_x-n1_w/2 >= n2_x-n2_w/2) && (n2_x+n2_w/2 >= n1_x-n1_w/2)))) return 1;
+	else return 0;																																		
 }
 
+void update_bullets(torre *tower){
 
+    bullet *previous = NULL;
+    for(bullet *index = tower->gun->shots; index!=NULL;){
+        if(!index->dir)
+            index->x -= BULLET_MOVE;
+        else if(index->dir == 1)
+            index->x += BULLET_MOVE;
+
+        if(index->x < 0){
+            if(previous){
+                previous->next = index->next;
+                bullet_destroy(index);
+                index = (bullet *) previous->next;
+            } else {
+                tower->gun->shots = (bullet *) index->next;
+                bullet_destroy(index);
+                index = tower->gun->shots;
+
+            }
+        } else{
+            previous = index;
+            index = (bullet *) index->next;
+        }
+    }
+}
 
 void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *vetor_serpentes[2]){
     
@@ -160,7 +190,10 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
         //         }
         //     }
             // }
-
+        for(int i = 0; i < 2; i++)
+            if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
+                vetor_serpentes[i]->x, vetor_serpentes[i]->y, vetor_serpentes[i]->width, vetor_serpentes[i]->height))
+                personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN - 20);
     }
 
     if (player_1->controle->right){
@@ -174,18 +207,30 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
         //         }
         //     }
         // }
+        for(int i = 0; i < 2; i++)
+            if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
+                vetor_serpentes[i]->x, vetor_serpentes[i]->y, vetor_serpentes[i]->width, vetor_serpentes[i]->height))
+                personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - 20);
     }
     if (player_1->controle->up){
         personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN);
+        for(int i = 0; i < 2; i++)
+            if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
+                vetor_serpentes[i]->x, vetor_serpentes[i]->y, vetor_serpentes[i]->width, vetor_serpentes[i]->height))
+                personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - 20);
     }
 
     if (player_1->controle->down){
         personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN);
+        for(int i = 0; i < 2; i++)
+            if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
+                vetor_serpentes[i]->x, vetor_serpentes[i]->y, vetor_serpentes[i]->width, vetor_serpentes[i]->height))
+                    personagem_move(player_1, -1, 3, X_FASE, Y_SCREEN - 20);
     }
 
     for(int i = 0; i < X_MAPA; i++){
         for(int j = 0; j< Y_MAPA; j++){
-            if(verificar_colisao(player_1->x + 10, player_1->y+20, player_1->width, player_1->height,
+            if(verificar_colisao(player_1->x +10, player_1->y+20, player_1->width, player_1->height,
                 bloco[i][j].x, bloco[i][j].y, bloco[i][j].w, bloco[i][j].h)){
                 // player_1->y = bloco[i][j].y - player_1->height;
                 jump = true;
@@ -193,10 +238,14 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
 
             // Verifica a colisão da serpente
             for(int w =0; w<2; w++){
-                if(verificar_colisao(vetor_serpentes[w]->x + 10, vetor_serpentes[w]->y+20, vetor_serpentes[w]->width, vetor_serpentes[w]->height,
+                if(verificar_colisao(vetor_serpentes[w]->x , vetor_serpentes[w]->y +20, vetor_serpentes[w]->width, vetor_serpentes[w]->height,
                     bloco[i][j].x, bloco[i][j].y, bloco[i][j].w, bloco[i][j].h)){
 
                     vetor_serpentes[w]->jump = true;
+                } else if(verificar_colisao(vetor_serpentes[w]->x , vetor_serpentes[w]->y, vetor_serpentes[w]->width, vetor_serpentes[w]->height,
+                    player_1->x , player_1->y +20, player_1->width, player_1->height)){
+
+                    jump = true;
                 }
             }
         }
@@ -245,7 +294,9 @@ int main(){
     // Variáveis
 
     bool menu = true;
-    float frame = 0.f, frame2 = 0.f,scale = 1.0f;
+    float scale = 1.0f;
+
+    float frame = 0.0f, frame2 = 0.0f;
     int pos_x = 0, pos_y = 0;
     int current_frame_y = 0;
 
@@ -259,7 +310,7 @@ int main(){
     
     inimigo *vetor_inimigos[MAX_ENEMYS];
     serpente *vetor_serpentes[2];
-
+    torre *tower;
 
 
     ALLEGRO_TIMER *timer = al_create_timer(1.0/30.0);
@@ -289,13 +340,12 @@ int main(){
         vetor_inimigos[i] = inimigo_create(77, 50, 1 + rand()%1280, Y_SCREEN - 60 - 25, X_SCREEN, Y_SCREEN);
 
     }
-
+    tower = torre_create(1500, 450, 60, 120, 0);
     // Vetor de serpentes
 
     vetor_serpentes[0] = serpente_create(72, 96, 350, Y_SCREEN/2, X_SCREEN, Y_SCREEN, al_load_bitmap("./imagens/snake.png"));
     vetor_serpentes[1] = serpente_create(72, 96, 720, Y_SCREEN/2, X_SCREEN, Y_SCREEN, al_load_bitmap("./imagens/snake.png"));
 
-    ALLEGRO_BITMAP *skin = al_load_bitmap(PERSONAGEM_SPRITE);
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
     
     
@@ -310,6 +360,7 @@ int main(){
     
     //-----------------------------------
     // Jogo
+
     while(1){
         al_wait_for_event(queue, &event);
 
@@ -322,10 +373,10 @@ int main(){
                 al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "Joguinho do ninja");
                 al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2 + 40, ALLEGRO_ALIGN_CENTER, "PRESSIONE ENTER");
                 al_flip_display();
-            
+                    
             }else{
 
-                if(verificar_vida(player_1)){
+                if(!verificar_vida(player_1)){
                     // Atualiza a posicao;
                     update_position(player_1, vetor_inimigos, vetor_serpentes);
                 
@@ -358,48 +409,24 @@ int main(){
                     }
 
                 // Desenhar o sprite na tela
-            
-                    if(player_1->controle->right && !player_1->controle->jump){
-                        frame +=0.8f;
-                        if(frame > 8){
-                            frame -= 8;
-                        }
-                        al_draw_bitmap_region(skin, 50 * (int) frame, 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
-                    } else if(player_1->controle->left && !player_1->controle->jump) {
-                        frame +=0.8f;
-                        if(frame > 8){
-                            frame -= 8;
-                        }
-                        al_draw_bitmap_region(skin, 50 * (int) frame, 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
-            
-                    }else if(player_1->controle->up) {
-                        frame += 0.4f;
-                        if(frame > 4){
-                            frame -= 4;
-                        }
-                        al_draw_bitmap_region(skin, 200 + 50 * (int) frame, 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
-                    } else if(player_1->controle->jump && player_1->controle->right){
-                        
-                        frame += 0.4f;
-                        if(frame > 4){
-                            frame -= 4;
-                        }
+                
+                animacao(player_1, vetor_serpentes, &frame, &frame2);
 
-                        al_draw_bitmap_region(skin, 200 + 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
-                    }
-                    else if(player_1->controle->jump && player_1->controle->left){
-                        
-                        frame += 0.4f;
-                        if(frame > 4){
-                            frame -= 4;
-                        }
+                al_draw_filled_rectangle(tower->x - tower->width/2, tower->y - tower->height/2, tower->x + tower->width/2, tower->y+tower->height/2, al_map_rgb(255, 0, 255));
+                    
+                if(!tower->gun->timer){
+                    torre_shot(tower);
+                    tower->gun->timer = PISTOL_COOLDOW;
+                }
 
-                        al_draw_bitmap_region(skin, 50 * (int) frame,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
-                    }
-                    else {
+                update_bullets(tower);
+                    
+                for(bullet *index = tower->gun->shots; index != NULL; index = (bullet *) index->next){
+                        al_draw_filled_circle(index->x, index->y, 2, al_map_rgb(0,0,0));
+                }
+                if(tower->gun->timer)
+                    tower->gun->timer--;
 
-                        al_draw_bitmap_region(skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
-                    }
 
                     frame2 += 0.03f;
                     if(frame2 > 3){
@@ -457,7 +484,7 @@ int main(){
         serpente_destroy(vetor_serpentes[i]);
     }
 
-    al_destroy_bitmap(skin);
+    personagem_destroy(player_1);
     al_destroy_bitmap(background);
 
     al_destroy_font(font);

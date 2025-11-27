@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "personagem.h"
 
+
+#include "personagem.h"
 
 personagem* personagem_create(int hp, int height, int width, float x, float y, int max_x, int max_y){
 
@@ -14,19 +15,24 @@ personagem* personagem_create(int hp, int height, int width, float x, float y, i
         return NULL;
     }
     
+    new_personagem->controle = joystick_create();
+    if(!new_personagem->controle){
+        free(new_personagem);
+        return NULL;
+    }
+
     new_personagem->hp = hp;
     new_personagem->width = width;
     new_personagem->height = height;
     new_personagem->x = x;
     new_personagem->y = y;
-    new_personagem->controle = joystick_create();
-    
     new_personagem->caindo = true;
     new_personagem->vel_x = 0;
     new_personagem->vel_y = 0;
-    if(!new_personagem->controle){
-        free(new_personagem);
-        return NULL;
+    new_personagem->skin = al_load_bitmap("./imagens/ninja.png");
+    if(!new_personagem->skin){
+        printf("Não foi possivel alocar o bitmap\n");
+        exit(1);
     }
 
     return new_personagem;
@@ -67,16 +73,62 @@ void personagem_move(personagem *elemento, int steps,  char trajectory,  int max
     }
 }
 void personagem_destroy(personagem *elemento){
+    al_destroy_bitmap(elemento->skin);
     joystick_destroy(elemento->controle);
     free(elemento);
 }
 
-bool verificar_vida(personagem *elemento){
+bool verificar_morte(personagem *elemento){
     if(elemento->hp <= 0){
-        return false;
+        return true;
     }
     if(elemento->y - elemento->height/2 > 650){
-        return false;
+        return true;
     }
-    return true;
+    return false;
+}
+
+void animacao(personagem *player_1, serpente *vetor_serpentes[2], float *frame, float *frame2){
+    
+    
+
+    if(player_1->controle->right && !player_1->controle->jump){
+        *frame +=0.8f;
+        if(*frame > 8){
+            *frame -= 8;
+        }
+        al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame), 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
+    } else if(player_1->controle->left && !player_1->controle->jump) {
+        
+        *frame +=0.8f;
+        if(*frame > 8){
+            *frame -= 8;
+        }
+        al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame), 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+            
+    }else if(player_1->controle->up) {
+        *frame += 0.4f;
+        if(*frame > 4){
+            *frame -= 4;
+        }
+        al_draw_bitmap_region(player_1->skin, 200 + 50 * (int) (*frame), 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+    } else if(player_1->controle->jump && player_1->controle->right){
+                        
+        *frame += 0.4f;
+        if(*frame > 4){
+            *frame -= 4;
+        }
+        al_draw_bitmap_region(player_1->skin, 200 + 50 * (int) (*frame),  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+    
+    } else if(player_1->controle->jump && player_1->controle->left){
+        *frame += 0.4f;
+        if(*frame > 4){
+            *frame -= 4;
+        }
+
+        al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame),  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+    
+    } else {
+        al_draw_bitmap_region(player_1->skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+    }
 }
