@@ -32,8 +32,10 @@ personagem* personagem_create(int hp, int height, int width, float x, float y, i
     new_personagem->timer = 0;
     new_personagem->venceu = false;
     new_personagem->agachado = false;
+    new_personagem->escalar = false;
     
     new_personagem->skin = al_load_bitmap("./imagens/ninja.png");
+    new_personagem->skin_agachado = al_load_bitmap("./imagens/ninja_agachado.png");
     if(!new_personagem->skin){
         printf("Não foi possivel alocar o bitmap\n");
         exit(1);
@@ -78,6 +80,7 @@ void personagem_move(personagem *elemento, int steps,  char trajectory,  int max
 }
 void personagem_destroy(personagem *elemento){
     al_destroy_bitmap(elemento->skin);
+    al_destroy_bitmap(elemento->skin_agachado);
     joystick_destroy(elemento->controle);
     free(elemento);
 }
@@ -162,7 +165,9 @@ void animacao(personagem *player_1, serpente *vetor_serpentes[2], float *frame, 
 
         al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame),  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
     
-    } else {
+    } else if(player_1->controle->agachar){
+        al_draw_bitmap_region(player_1->skin_agachado, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+    }else {
         al_draw_bitmap_region(player_1->skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
     }
 }

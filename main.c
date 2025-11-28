@@ -92,6 +92,7 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
                 bloco[i][j].wy = 0;
                 bloco[i][j].dano = false;
                 bloco[i][j].fim = false;
+                bloco[i][j].escalavel = false;
                 bloco[i][j].sprite = al_load_bitmap("./imagens/Pedaco_de_grama.png");
             } else if(map[i][j] == 51){
                 bloco[i][j].y = i * BLOCK_SIZE;
@@ -101,6 +102,7 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
                 bloco[i][j].wy = 0;
                 bloco[i][j].dano = true;
                 bloco[i][j].fim = false;
+                bloco[i][j].escalavel = false;
                 bloco[i][j].sprite = al_load_bitmap("./imagens/espinhos.png");
             
             }else if(map[i][j] == 52){
@@ -111,6 +113,7 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
                 bloco[i][j].wy = 0;
                 bloco[i][j].dano = true;
                 bloco[i][j].fim = false;
+                bloco[i][j].escalavel = false;
                 bloco[i][j].sprite = al_load_bitmap("./imagens/water2.png");
             }else if(map[i][j] == 53){
                 bloco[i][j].y = i * BLOCK_SIZE;
@@ -120,7 +123,19 @@ void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
                 bloco[i][j].wy = 0;
                 bloco[i][j].dano = false;
                 bloco[i][j].fim = true;
+                bloco[i][j].escalavel = true;
                 bloco[i][j].sprite = al_load_bitmap("./imagens/banner.png");
+            }
+            else if(map[i][j] == 54){
+                bloco[i][j].y = i * BLOCK_SIZE;
+                bloco[i][j].x = j * BLOCK_SIZE;
+                bloco[i][j].w = BLOCK_SIZE;
+                bloco[i][j].h = 77;
+                bloco[i][j].wy = 0;
+                bloco[i][j].dano = false;
+                bloco[i][j].fim = false;
+                bloco[i][j].escalavel = true;
+                bloco[i][j].sprite = al_load_bitmap("./imagens/escadas.png");
             } else {
                 bloco[i][j].y = OUT;
                 bloco[i][j].x = OUT;
@@ -160,13 +175,18 @@ void atualizarCamera(float *cameraPosition, float x, float y, int width, int hei
 int verificar_colisao(int n1_x, int n1_y, int n1_w, int n1_h,
     int n2_x, int n2_y, int n2_w, int n2_h){
     
-    //if(n1_x + n1_w > n2_x && n1_x < n2_x + n2_w && n1_y + n1_h > n2_y && n1_y < n2_y + n2_h)
-    //    return 1;
+    if(n1_x + n1_w > n2_x && n1_x < n2_x + n2_w && n1_y + n1_h > n2_y && n1_y < n2_y + n2_h)
+       return 1;
 
-    if ((((n2_y-n2_h/2 >= n1_y-n1_y/2) && (n1_y+n1_h/2 >= n2_y-n2_h/2)) ||
-		((n1_y-n1_h/2 >= n2_y-n2_h/2) && (n2_y+n2_h/2 >= n1_y-n1_h/2))) && 
-		(((n2_x-n2_w/2 >= n1_x-n1_w/2) && (n1_x+n1_w/2 >= n2_x-n2_w/2)) || 	
-		((n1_x-n1_w/2 >= n2_x-n2_w/2) && (n2_x+n2_w/2 >= n1_x-n1_w/2)))) return 1;
+    // if ((((n2_y-n2_h/2 >= n1_y-n1_y/2) && (n1_y+n1_h/2 >= n2_y-n2_h/2)) ||
+	// 	((n1_y-n1_h/2 >= n2_y-n2_h/2) && (n2_y+n2_h/2 >= n1_y-n1_h/2))) && 
+	// 	(((n2_x-n2_w/2 >= n1_x-n1_w/2) && (n1_x+n1_w/2 >= n2_x-n2_w/2)) || 	
+	// 	((n1_x-n1_w/2 >= n2_x-n2_w/2) && (n2_x+n2_w/2 >= n1_x-n1_w/2)))) {
+            
+    //         return 1;
+
+    //     }
+
 	else return 0;																																		
 }
 
@@ -198,7 +218,7 @@ void update_bullets(torre *tower){
     }
 }
 
-void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *vetor_serpentes[2], plataforma *plataform){
+void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *vetor_serpentes[2], plataforma *plataform, torre *tower){
     
     bool jump = false;  
     int gravidade = GRAVIDADE;
@@ -218,7 +238,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
                 if(((bloco[i][j].x + bloco[i][j].w/2 >= player_1->x - player_1->width/2) &&
                 (player_1->x - player_1->width/2 >= bloco[i][j].x - bloco[i][j].w/2)) && 
                 ((bloco[i][j].y + bloco[i][j].h/2 >= player_1->y - player_1->height/2) &&
-                (player_1->y - player_1->height/2 >= bloco[i][j].y - bloco[i][j].h/2))){
+                (player_1->y - player_1->height/2 >= bloco[i][j].y - bloco[i][j].h/2)) && !bloco[i][j].escalavel){
                     personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN);
                 }
             }
@@ -241,7 +261,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
                 if(((player_1->x + player_1->width/2 >= bloco[i][j].x - bloco[i][j].w/2) && 
                 (bloco[i][j].x - bloco[i][j].w/2 >= player_1->x - player_1->width/2)) && 
                 ((player_1->y + player_1->height/2 >= bloco[i][j].y - bloco[i][j].h/2) 
-                && (bloco[i][j].y - bloco[i][j].h/2 >= player_1->y - player_1->height/2))){
+                && (bloco[i][j].y - bloco[i][j].h/2 >= player_1->y - player_1->height/2)) && !bloco[i][j].escalavel){
 
                     personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN);
                 }
@@ -255,21 +275,10 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
                 personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN - 20);
 
     }
-    if (player_1->controle->up){
+    if (player_1->controle->up && player_1->escalar){
         personagem_move(player_1, 1, 2, X_FASE, Y_SCREEN);
-        for(int i = 0; i < 2; i++)
-            if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
-                vetor_serpentes[i]->x, vetor_serpentes[i]->y, vetor_serpentes[i]->width, vetor_serpentes[i]->height))
-                personagem_move(player_1, -1, 2, X_FASE, Y_SCREEN - 20);
     }
 
-    if (player_1->controle->down){
-        personagem_move(player_1, 1, 3, X_SCREEN, Y_SCREEN);
-        for(int i = 0; i < 2; i++)
-            if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
-                vetor_serpentes[i]->x, vetor_serpentes[i]->y, vetor_serpentes[i]->width, vetor_serpentes[i]->height))
-                    personagem_move(player_1, -1, 3, X_FASE, Y_SCREEN - 20);
-    }
 
     if (player_1->controle->agachar && !player_1->agachado){
         player_1->height = 50;
@@ -284,9 +293,11 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
     // colisao dos blocos
     for(int i = 0; i < X_MAPA; i++){
         for(int j = 0; j< Y_MAPA; j++){
-            if(verificar_colisao(player_1->x +10, player_1->y+20, player_1->width, player_1->height,
+            if(verificar_colisao(player_1->x , player_1->y +10, player_1->width, player_1->height,
                 bloco[i][j].x, bloco[i][j].y, bloco[i][j].w, bloco[i][j].h)){
-                player_1->y = bloco[i][j].y - player_1->height;
+                if(!bloco[i][j].escalavel){
+                    player_1->y = bloco[i][j].y - player_1->height;
+                }
                 jump = true;
                
                 if(bloco[i][j].dano && !player_1->timer){
@@ -296,6 +307,11 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
                 }
                 if(bloco[i][j].fim){
                     player_1->venceu = true;
+                }
+                if(bloco[i][j].escalavel){
+                    player_1->escalar = true;
+                } else {
+                    player_1->escalar = false;
                 }
             }
 
@@ -335,6 +351,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
         }
     }
 
+    // Colisão inimigo vs player
     for(int z =0; z<MAX_ENEMYS; z++){
         if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
           vetor_inimigos[z]->x, vetor_inimigos[z]->y, vetor_inimigos[z]->width, vetor_inimigos[z]->height)){
@@ -345,12 +362,39 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
                 player_1->timer = INVENCIBILIDADE;
                 printf("Atingido\n");
             }
+            if(player_1->controle->left){
+                personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN);
+                
+            } else if(player_1->controle->right)
+                personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN);
+
+
+            if(!vetor_inimigos[z]->dir){
+                inimigo_move(vetor_inimigos[z], -1, 0, X_FASE, Y_SCREEN);
+            } else {
+                inimigo_move(vetor_inimigos[z], -1, 1, X_FASE, Y_SCREEN);
+            }
         }
     }
 
+
+    // colisao player vs torre
+    if(verificar_colisao( player_1->x, player_1->y, player_1->width, player_1->height,
+        tower->x , tower->y, tower->width, tower->height)){
+        jump = true;
+        if(player_1->controle->left){
+            personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN);
+                
+        } else if(player_1->controle->right)
+            personagem_move(player_1, -1, 1, X_FASE, Y_SCREEN);
+
+    }
+    
+    // Colisao com a plataforma
     if(verificar_colisao(player_1->x , player_1->y + 20, player_1->width, player_1->height,
       plataform->x , plataform->y, plataform->w, plataform->h))
         jump = true;
+
     // faz o player pular
     if (player_1->controle->jump && jump){
         player_1->vel_y = -jumpSpeed;
@@ -551,7 +595,7 @@ int main(){
                         al_use_transform(&camera);
 
                         // Atualiza a posicao;
-                        update_position(player_1, vetor_inimigos, vetor_serpentes, plataform);
+                        update_position(player_1, vetor_inimigos, vetor_serpentes, plataform, tower);
                         kill = verificar_morte(player_1, tower);
 
                         // Desenha o background e faz ele ir para trás
@@ -635,7 +679,7 @@ int main(){
 
                         if (event.keyboard.keycode == 82) joystick_left(player_1->controle);
                         else if (event.keyboard.keycode == 83) joystick_right(player_1->controle);
-                        // else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
+                        else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
                         // else if (event.keyboard.keycode == 85) joystick_down(player_1->controle);
                         else if (event.keyboard.keycode == ALLEGRO_KEY_LCTRL) joystick_agachar(player_1->controle);
                         else if(event.keyboard.keycode == ALLEGRO_KEY_SPACE) joystick_jump(player_1->controle);

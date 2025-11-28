@@ -19,13 +19,19 @@ void updateBackground(background *bg, int dir){
     bg->x += bg->vel_x * dir;
     if(bg->x + bg->whidth <= 0){
         bg->x = 0;
-
+    }
+    if(bg->x >= bg->whidth){
+        bg->x -= bg->whidth;
     }
 }
 void drawBackground(background *bg){
     al_draw_bitmap(bg->bitmap, bg->x, bg->y, 0);
+    
+    if(bg->x > 0)
+        al_draw_bitmap(bg->bitmap, bg->x - bg->whidth, bg->y, 0);
 
     if(bg->x + bg->whidth < 800){
         al_draw_bitmap(bg->bitmap, bg->x + bg->whidth, bg->y, 0);
     }
+
 }

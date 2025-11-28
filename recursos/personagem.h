@@ -17,7 +17,6 @@
 #define INVENCIBILIDADE 40
 
 typedef struct {
-    // Antigo
     
     int hp; 
     int height, width;
@@ -27,12 +26,12 @@ typedef struct {
     int timer;
 
     ALLEGRO_BITMAP *skin;
-    // Novo
+    ALLEGRO_BITMAP *skin_agachado;
 
     int vel_x, vel_y;
     bool caindo;
     bool venceu;
-    bool agachado;
+    bool agachado, escalar;
     
 } personagem;
 
