@@ -14,6 +14,7 @@
 
 #define MAN_STEPS 10
 #define GRAVITY 10
+#define INVENCIBILIDADE 50
 
 typedef struct {
     // Antigo
@@ -23,6 +24,7 @@ typedef struct {
     int x;
     int y;
     joystick *controle;
+    int timer;
 
     ALLEGRO_BITMAP *skin;
     // Novo

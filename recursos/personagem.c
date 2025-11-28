@@ -29,6 +29,8 @@ personagem* personagem_create(int hp, int height, int width, float x, float y, i
     new_personagem->caindo = true;
     new_personagem->vel_x = 0;
     new_personagem->vel_y = 0;
+    new_personagem->timer = 0;
+
     new_personagem->skin = al_load_bitmap("./imagens/ninja.png");
     if(!new_personagem->skin){
         printf("Não foi possivel alocar o bitmap\n");
@@ -79,6 +81,10 @@ void personagem_destroy(personagem *elemento){
 }
 
 int verificar_morte(personagem *vitima, torre *tower){
+    if(vitima->hp <= 0){
+        return 1;
+    }
+
     bullet *previous = NULL;
     for(bullet *index = (bullet *)  tower->gun->shots; index != NULL; index = (bullet *) index->next){
         if((index->x >= vitima->x - vitima->width/2) && (index->x <= vitima->x + vitima->width/2) && 
@@ -87,6 +93,7 @@ int verificar_morte(personagem *vitima, torre *tower){
             if(vitima->hp){
                 
                 vitima->hp--;
+                vitima->timer = INVENCIBILIDADE;
                 if(previous){
                     previous->next = index->next;
                     bullet_destroy(index);
