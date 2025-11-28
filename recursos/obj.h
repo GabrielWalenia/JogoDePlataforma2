@@ -6,6 +6,7 @@
 typedef struct{
     int wx, wy, x, y, w, h;
     bool dano;
+    bool fim;
     ALLEGRO_BITMAP *sprite;
 } obj;
 

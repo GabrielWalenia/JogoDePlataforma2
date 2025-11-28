@@ -1,7 +1,7 @@
 #ifndef __INIMIGO__
 #define __INIMIGO__
 
-#define ENEMY_STEPS 10
+#define ENEMY_STEPS 5
 
 #include <stdbool.h>
 #include <allegro5/allegro5.h>

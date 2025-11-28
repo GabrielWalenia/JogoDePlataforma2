@@ -14,7 +14,7 @@
 
 #define MAN_STEPS 10
 #define GRAVITY 10
-#define INVENCIBILIDADE 50
+#define INVENCIBILIDADE 40
 
 typedef struct {
     // Antigo
@@ -31,7 +31,9 @@ typedef struct {
 
     int vel_x, vel_y;
     bool caindo;
-
+    bool venceu;
+    bool agachado;
+    
 } personagem;
 
 personagem* personagem_create(int hp, int height, int width, float x, float y,
