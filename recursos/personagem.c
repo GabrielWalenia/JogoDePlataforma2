@@ -45,9 +45,6 @@ personagem* personagem_create(int hp, int height, int width, float x, float y, i
 }
 void personagem_move(personagem *elemento, int steps,  char trajectory,  int max_x, int max_y){
     
-    // printf("posicao x = %d\n", elemento->x);
-    // printf("posicao y = %d\n", elemento->y);
-
     //Movimentação a esquerda
     if(!trajectory){
         if ((elemento->x - steps*MAN_STEPS) - elemento->width/2 >= 0){
@@ -72,12 +69,13 @@ void personagem_move(personagem *elemento, int steps,  char trajectory,  int max
         if((elemento->y+ steps*MAN_STEPS) + elemento->height/2 <= max_y){
             elemento->y = elemento->y + steps*MAN_STEPS;
         }
-        // pular
+    // pular
     } else if(trajectory == 4){
             elemento->vel_y = elemento->vel_y + steps*40;
             elemento->y -= elemento->vel_y;
     }
 }
+
 void personagem_destroy(personagem *elemento){
     al_destroy_bitmap(elemento->skin);
     al_destroy_bitmap(elemento->skin_agachado);
@@ -134,40 +132,62 @@ void animacao(personagem *player_1, serpente *vetor_serpentes[2], float *frame, 
         if(*frame > 8){
             *frame -= 8;
         }
-        al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame), 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
+
+        if(player_1->timer > 0){
+            al_draw_tinted_bitmap_region(player_1->skin, al_map_rgba(255, 0, 0, 0.5) ,50 * (int) (*frame), 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame), 154, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height / 2 , 0);
+        }
     } else if(player_1->controle->left && !player_1->controle->jump) {
         
         *frame +=0.8f;
         if(*frame > 8){
             *frame -= 8;
         }
-        al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame), 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
-            
+        
+        if(player_1->timer > 0){
+            al_draw_tinted_bitmap_region(player_1->skin, al_map_rgba(255, 0, 0, 0.5), 50 * (int) (*frame), 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame), 77, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+        }
     }else if(player_1->controle->up) {
         *frame += 0.4f;
         if(*frame > 4){
             *frame -= 4;
         }
-        al_draw_bitmap_region(player_1->skin, 200 + 50 * (int) (*frame), 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+        if(player_1->timer > 0){
+            al_draw_tinted_bitmap_region(player_1->skin, al_map_rgba(255, 0, 0, 0.5), 200 + 50 * (int) (*frame), 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin, 200 + 50 * (int) (*frame), 0, 50, 77, player_1->x - player_1->width / 2, player_1->y - player_1->height/2 , 0);
+        }
+        
     } else if(player_1->controle->jump && player_1->controle->right){
                         
-        *frame += 0.4f;
-        if(*frame > 4){
-            *frame -= 4;
+        if(player_1->timer > 0){
+            al_draw_tinted_bitmap_region(player_1->skin, al_map_rgba(255, 0, 0, 0.5) ,300, 308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin, 300,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
         }
-        al_draw_bitmap_region(player_1->skin, 200 + 50 * (int) (*frame),  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
-    
     } else if(player_1->controle->jump && player_1->controle->left){
-        *frame += 0.4f;
-        if(*frame > 4){
-            *frame -= 4;
-        }
 
-        al_draw_bitmap_region(player_1->skin, 50 * (int) (*frame),  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        if(player_1->timer > 0){
+            al_draw_tinted_bitmap_region(player_1->skin, al_map_rgba(255, 0, 0, 0.5), 100,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin, 100,  308, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        }
     
     } else if(player_1->controle->agachar){
-        al_draw_bitmap_region(player_1->skin_agachado, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        if(player_1->timer > 0){ 
+            al_draw_tinted_bitmap_region(player_1->skin_agachado, al_map_rgba(255, 0, 0, 0.5), 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin_agachado, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        }
     }else {
-        al_draw_bitmap_region(player_1->skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        if(player_1->timer > 0){
+            al_draw_tinted_bitmap_region(player_1->skin, al_map_rgba(255, 0, 0, 0.5), 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        } else {
+            al_draw_bitmap_region(player_1->skin, 0,  0, 50, 77, player_1->x - player_1->width/ 2, player_1->y - player_1->height /2, 0);
+        }
+        
     }
 }

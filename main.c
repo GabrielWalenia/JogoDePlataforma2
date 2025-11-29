@@ -1,19 +1,4 @@
 
-/*
-sprite 2
-x: 50
-y: 77
-*/
-
-
-/*
-Cobra
-x: 96
-y: 72
-
-*/
-
-// Não da para passar por baixo dos objetos
 
 
 #include <stdio.h>
@@ -40,13 +25,14 @@ y: 72
 #include "./recursos/torre.h"
 #include "./recursos/pistol.h"
 #include "./recursos/plataforma.h"
+#include "./recursos/estalactite.h"
 
 #define BACKGROUND_FILE "./imagens/bg2.jpg"
 #define PERSONAGEM_SPRITE "./imagens/ninja.png"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
-#define X_FASE 1000000
+#define X_FASE 7000
 #define X_MAPA 10
 #define Y_MAPA 100
 #define MAX_PULO 50
@@ -60,13 +46,31 @@ y: 72
 background bg;
 obj p = {4, 11, 500, 50, BLOCK_SIZE, BLOCK_SIZE}, bloco[X_MAPA][Y_MAPA];
 
+void desenhar_barra_vida(int x, int y, int vida_atual, int vida_maxima){
+    float largura = 100.0;
+    float altura = 20.0;
+
+    float proporcao = (float) vida_atual/vida_maxima;
+
+    if (proporcao < 0)
+        proporcao = 0;
+    if (proporcao > 1)
+        proporcao = 1;
+
+    float largura_vida = largura * proporcao;
+
+    al_draw_filled_rectangle(x, y, x + largura, y + altura, al_map_rgb(150, 0, 0));
+
+    al_draw_filled_rectangle(x, y , x + largura_vida, y + altura,al_map_rgb(0, 0, 200));
+
+}
 
 void loadMap(const char *filename, int map [100][100], int max_x, int max_y){
     char buffer;
     
     FILE *arquivo = fopen(filename, "r+b");
     if(!arquivo){
-        printf("Não\n");
+        printf("Não abriu o arquivo\n");
         return ;
     }
 
@@ -152,7 +156,6 @@ void drawMap(int map [100][100], int max_x, int max_y, ALLEGRO_BITMAP *sprite){
 
     for(int i = 0; i< max_x; i++){
         for(int j = 0; j < max_y; j++){
-            //al_draw_filled_rectangle(bloco[i][j].x - bloco[i][j].w/2, bloco[i][j].y - bloco[i][j].h/2, bloco[i][j].x + bloco[i][j].w/2, bloco[i][j].y + bloco[i][j].h/2, al_map_rgb(0, 255, 0));
             al_draw_bitmap(bloco[i][j].sprite, bloco[i][j].x - bloco[i][j].w/2,bloco[i][j].y - bloco[i][j].h/2, 0);
         }
     }
@@ -161,7 +164,6 @@ void drawMap(int map [100][100], int max_x, int max_y, ALLEGRO_BITMAP *sprite){
 
 void atualizarCamera(float *cameraPosition, float x, float y, int width, int height){
         cameraPosition[0] = -( X_SCREEN / 2) + (x + width/2) ;
-        // cameraPosition[1] = -( Y_SCREEN / 2) + (y + height/2);
 
         if(cameraPosition[0] < 0){
             cameraPosition[0] = 0;
@@ -178,15 +180,6 @@ int verificar_colisao(int n1_x, int n1_y, int n1_w, int n1_h,
     if(n1_x + n1_w > n2_x && n1_x < n2_x + n2_w && n1_y + n1_h > n2_y && n1_y < n2_y + n2_h)
        return 1;
 
-    // if ((((n2_y-n2_h/2 >= n1_y-n1_y/2) && (n1_y+n1_h/2 >= n2_y-n2_h/2)) ||
-	// 	((n1_y-n1_h/2 >= n2_y-n2_h/2) && (n2_y+n2_h/2 >= n1_y-n1_h/2))) && 
-	// 	(((n2_x-n2_w/2 >= n1_x-n1_w/2) && (n1_x+n1_w/2 >= n2_x-n2_w/2)) || 	
-	// 	((n1_x-n1_w/2 >= n2_x-n2_w/2) && (n2_x+n2_w/2 >= n1_x-n1_w/2)))) {
-            
-    //         return 1;
-
-    //     }
-
 	else return 0;																																		
 }
 
@@ -199,7 +192,7 @@ void update_bullets(torre *tower){
         else if(index->dir == 1)
             index->x += BULLET_MOVE;
 
-        if(index->x < 0){
+        if(index->x < 750){
 
             if(previous){
                 previous->next = index->next;
@@ -218,15 +211,14 @@ void update_bullets(torre *tower){
     }
 }
 
-void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *vetor_serpentes[2], plataforma *plataform, torre *tower){
+void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *vetor_serpentes[2], 
+    plataforma *plataform, torre *tower, estalactite *vetor_estalactites[2]){
     
     bool jump = false;  
     int gravidade = GRAVIDADE;
     int jumpSpeed = 15;
 
-    if(player_1->timer > 0){
-        player_1->timer--;
-    }
+
     // movimenta para esquerda
     if (player_1->controle->left){
         updateBackground(&bg, 1);
@@ -293,8 +285,10 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
     // colisao dos blocos
     for(int i = 0; i < X_MAPA; i++){
         for(int j = 0; j< Y_MAPA; j++){
-            if(verificar_colisao(player_1->x , player_1->y +10, player_1->width, player_1->height,
+            if(verificar_colisao(player_1->x , player_1->y + 10 , player_1->width, player_1->height,
                 bloco[i][j].x, bloco[i][j].y, bloco[i][j].w, bloco[i][j].h)){
+                
+                // verifico se o player não está colidindo por baixo e o bloco não é escalavel
                 if(!bloco[i][j].escalavel){
                     player_1->y = bloco[i][j].y - player_1->height;
                 }
@@ -303,7 +297,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
                 if(bloco[i][j].dano && !player_1->timer){
                     player_1->hp--;
                     player_1->timer = INVENCIBILIDADE;
-                    printf("Atingido\n");
+
                 }
                 if(bloco[i][j].fim){
                     player_1->venceu = true;
@@ -337,6 +331,13 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
         }
     }
 
+    for(int a = 0; a < 2; a++){
+        if(vetor_estalactites[a] != NULL){
+            if(player_1->x + player_1->width/2 >= vetor_estalactites[a]->x - vetor_estalactites[a]->width/2){
+                vetor_estalactites[a]->caindo = true;
+            }
+        }
+    }
     // colisao serpente vs player
     for(int w = 0; w < 2; w ++){
         if(verificar_colisao( player_1->x, player_1->y, player_1->width, player_1->height,
@@ -346,7 +347,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
         if(!player_1->timer){
                 player_1->hp--;
                 player_1->timer = INVENCIBILIDADE;
-                printf("Atingido\n");
+
             }
         }
     }
@@ -360,7 +361,7 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
             if(!player_1->timer){
                 player_1->hp--;
                 player_1->timer = INVENCIBILIDADE;
-                printf("Atingido\n");
+
             }
             if(player_1->controle->left){
                 personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN);
@@ -379,9 +380,11 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
 
 
     // colisao player vs torre
-    if(verificar_colisao( player_1->x, player_1->y, player_1->width, player_1->height,
+    if(verificar_colisao(player_1->x, player_1->y, player_1->width, player_1->height,
         tower->x , tower->y, tower->width, tower->height)){
+        
         jump = true;
+        
         if(player_1->controle->left){
             personagem_move(player_1, -1, 0, X_FASE, Y_SCREEN);
                 
@@ -394,6 +397,22 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
     if(verificar_colisao(player_1->x , player_1->y + 20, player_1->width, player_1->height,
       plataform->x , plataform->y, plataform->w, plataform->h))
         jump = true;
+
+    // Colisao player vs estalactite
+    for(int a = 0; a<2; a++){
+        if(vetor_estalactites[a] != NULL){
+            if(verificar_colisao( player_1->x, player_1->y, player_1->width, player_1->height,
+            vetor_estalactites[a]->x , vetor_estalactites[a]->y, vetor_estalactites[a]->width, vetor_estalactites[a]->height)){
+
+                jump = true;
+                if(!player_1->timer){
+                    player_1->hp--;
+                    player_1->timer = INVENCIBILIDADE;
+                }
+                
+            }
+        }
+    }
 
     // faz o player pular
     if (player_1->controle->jump && jump){
@@ -457,6 +476,19 @@ void update_position(personagem *player_1 , inimigo **vetor_inimigos, serpente *
         plataform->dir = 0;
     }
 
+    // gravidade para as estalactites
+    for(int a = 0; a < 2 ; a++){
+        if(vetor_estalactites[a] != NULL){
+            vetor_estalactites[a]->y += vetor_estalactites[a]->vel_y;
+            
+            // Não quero que as estalactites caiam infinitamente
+            if(vetor_estalactites[a]->caindo && (vetor_estalactites[a]->y - vetor_estalactites[a]->height/2 <= Y_SCREEN ))
+                vetor_estalactites[a]->vel_y += gravidade;
+            else 
+                vetor_estalactites[a]->vel_y = 0;
+        }
+    }
+
 }
 
 
@@ -467,6 +499,8 @@ int main(){
     // Iniciação componentes
     al_init();
     al_install_keyboard();
+    al_install_audio();
+
     al_init_ttf_addon();
     al_init_primitives_addon();
     al_init_image_addon();
@@ -482,28 +516,36 @@ int main(){
     int pos_x = 0, pos_y = 0;
     int current_frame_y = 0;
     int kill = 0;
-
+    float volume = 1.0f;
 
     float cameraPosition[2] = {0, 0};
 
-    int loadCounterX = 0, loadCounterY = 0, mapSizeX = X_MAPA, mapSizeY = Y_MAPA;
+    int mapSizeX = X_MAPA, mapSizeY = Y_MAPA;
     int map[100][100];
 
-
+    char barraVolume[5];
     
-    // inimigo *vetor_inimigos[MAX_ENEMYS];
     inimigo *vetor_inimigos[MAX_ENEMYS];
     serpente *vetor_serpentes[2];
     torre *tower;
 
+    estalactite *vetor_estalactites[2];
 
     ALLEGRO_TIMER *timer = al_create_timer(1.0/30.0);
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
     ALLEGRO_FONT *font = al_load_ttf_font("./imagens/Freedom-10eM.ttf", 36, 0);
+    ALLEGRO_FONT *font2 = al_create_builtin_font();
     ALLEGRO_DISPLAY *disp = al_create_display(X_SCREEN, Y_SCREEN);
 
     ALLEGRO_TRANSFORM camera;
+    al_reserve_samples(1); 
+    ALLEGRO_SAMPLE *song = al_load_sample("./audio/GreatBoss.ogg");
 
+    ALLEGRO_SAMPLE_INSTANCE *song_instance = al_create_sample_instance(song);
+    if(!song || !song_instance){
+        printf("Não foi possivel criar a musica\n");
+        return 1;
+    }
     // -----------------------------------
     // Iniciando a fila
 
@@ -516,37 +558,61 @@ int main(){
     // -----------------------------------
     // Elementos
 
+    al_set_sample_instance_playmode(song_instance, ALLEGRO_PLAYMODE_LOOP);
+    al_attach_sample_instance_to_mixer(song_instance, al_get_default_mixer());
     personagem* player_1 = personagem_create(5, 77, 50, 25.0, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
-    // personagem* player_1 = personagem_create(3, 77, 50, X_SCREEN/2, Y_SCREEN/2, X_SCREEN, Y_SCREEN);
-    if (!player_1) return 1;
-
-    // for(int i = 0; i<MAX_ENEMYS; i++){
-    //     vetor_inimigos[i] = inimigo_create(77, 50, 1 + rand()%1280, Y_SCREEN - 60 - 25, X_SCREEN, Y_SCREEN);
-
-    // }
+    if (!player_1){
+        printf("Não foi possivel criar o personagem");
+        return 1;
+    }
     vetor_inimigos[0] = inimigo_create(2730, Y_SCREEN/2, 60, 60, X_FASE, Y_SCREEN);
+
+    if(!vetor_inimigos[0]){
+        printf("Não foi possivel criar o inimigo\n");
+        return 1;
+    }
     tower = torre_create(1500 + 190, 440, 60, 120, 0);
-    //2500
+    if(!tower){
+        printf("Não foi possivel criar a torre\n");
+        return 1;
+    }
     // Vetor de serpentes
     vetor_serpentes[0] = serpente_create(72, 96, 350 + 65, Y_SCREEN/2, X_FASE, Y_SCREEN, al_load_bitmap("./imagens/snake.png"));
     vetor_serpentes[1] = serpente_create(72, 96, 720 + 145, Y_SCREEN/2, X_FASE, Y_SCREEN, al_load_bitmap("./imagens/snake.png"));
+    
+    if(!vetor_serpentes[0] || !vetor_serpentes[1]){
+        printf("Não foi possivel criar as serpentes\n");
+        return 1;
+    }
+    // Vetor de estalactites
+    vetor_estalactites[0] = estalactite_create(2080, 20, 65, 40);
+    vetor_estalactites[1] = estalactite_create(6240, 20, 65 , 40);
 
+    if(!vetor_estalactites[0] || !vetor_estalactites[1]){
+        printf("Não foi possivel criar as estalactites\n");
+        return 1;
+    }
     plataforma *plataform = plataforma_create(4420, Y_SCREEN - 65, 120, 30);
     if(!plataform){
-        printf("Não foi possivel\n");
+        printf("Não foi possivel criar a plataformal\n");
+        return 1;
     }
     ALLEGRO_BITMAP *background = al_load_bitmap(BACKGROUND_FILE);
     ALLEGRO_BITMAP *torre_skin = al_load_bitmap("./imagens/torre.png");
 
     ALLEGRO_BITMAP *sprite_inimigo = al_load_bitmap("./imagens/samurai.png");
     ALLEGRO_BITMAP *sprite_inimigo_invertido = al_load_bitmap("./imagens/samurai_invertido.png");
-    if(!sprite_inimigo || !sprite_inimigo_invertido){
+
+    if(!sprite_inimigo || !sprite_inimigo_invertido || !background || !torre_skin){
         printf("Não foi possivel carregar o bitmap\n");
+        return 1;
     }
 
     // inicia o background
     initBackground(&bg, 0, 0, 1, 0, 1065, 600, -1, 1, background);
     loadMap("./mapas/fase1.txt", map, mapSizeX, mapSizeY);
+
+    al_play_sample_instance(song_instance);
 
     ALLEGRO_EVENT event;
 
@@ -561,11 +627,41 @@ int main(){
 
         if(menu){
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "TAKAKARANOMURO TWO");
+            al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "TAKAKARANOMURO DOIS");
             al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2 + 40, ALLEGRO_ALIGN_CENTER, "PRESSIONE ENTER");
+
+            if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+                if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
+                    volume += 0.2f;
+                    if (volume > 1.0f) volume = 1.0f;
+                        al_set_mixer_gain(al_get_default_mixer(), volume);
+                }
+                
+                if (event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+                    volume -= 0.2f;
+                    if (volume < 0.0f) volume = 0.0f;
+                        al_set_mixer_gain(al_get_default_mixer(), volume);
+                
+
+                }
+            }
+                        
+            int barras = (int)(volume * 5);
+
+            for (int i = 0; i < barras; i++)
+                barraVolume[i] = '-';
+
+            barraVolume[barras] = '\0';
+
+            al_draw_text(font2, al_map_rgb(255,0, 0), X_SCREEN/2, Y_SCREEN/2 + 80, ALLEGRO_ALIGN_CENTER, "Volume:");
+            al_draw_text(font2, al_map_rgb(255,255,255), X_SCREEN/2 + 50, Y_SCREEN/2 + 80, 0, barraVolume);
+
+
+
             al_flip_display();  
-            if ((event.type == 10) || (event.type == 12) && event.keyboard.keycode == ALLEGRO_KEY_ENTER) menu = false;
-                  
+            if (event.keyboard.keycode == ALLEGRO_KEY_ENTER) menu = false;
+            if (event.type == 42) break;
+
         } else {
             if(kill){
                 al_identity_transform(&camera);
@@ -573,9 +669,10 @@ int main(){
                 
                 al_clear_to_color(al_map_rgb(0, 0, 0));
                 al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "GAME OVER");
-                al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2 + 50, ALLEGRO_ALIGN_CENTER, "Precione enter para sair");
+                al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2 + 50, ALLEGRO_ALIGN_CENTER, "Pressione enter para sair");
                 al_flip_display();
-                if ((event.type == 10) || (event.type == 12) && event.keyboard.keycode == ALLEGRO_KEY_ENTER) break;
+                if(event.keyboard.keycode == ALLEGRO_KEY_ENTER) break;
+                if (event.type == 42) break;
                         
             } else {
                 if(player_1->venceu){
@@ -584,7 +681,7 @@ int main(){
                 
                 al_clear_to_color(al_map_rgb(0, 0, 0));
                 al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "YOU WIN!");
-                al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2 + 50, ALLEGRO_ALIGN_CENTER, "Precione enter para sair");
+                al_draw_text(font, al_map_rgb(0, 0, 255), X_SCREEN/2, Y_SCREEN/2 + 50, ALLEGRO_ALIGN_CENTER, "Pressione enter para sair");
                 al_flip_display();
                 if ((event.type == 10) || (event.type == 12) && event.keyboard.keycode == ALLEGRO_KEY_ENTER) break;
                 }else{
@@ -595,12 +692,13 @@ int main(){
                         al_use_transform(&camera);
 
                         // Atualiza a posicao;
-                        update_position(player_1, vetor_inimigos, vetor_serpentes, plataform, tower);
+                        update_position(player_1, vetor_inimigos, vetor_serpentes, plataform, tower, vetor_estalactites);
                         kill = verificar_morte(player_1, tower);
 
                         // Desenha o background e faz ele ir para trás
                         drawBackground(&bg);
-                        
+                        desenhar_barra_vida(80, 20, player_1->hp, 5);
+
 
                         atualizarCamera(cameraPosition, player_1->x, player_1->y, player_1->width, player_1->height);
                         
@@ -610,24 +708,17 @@ int main(){
                         al_use_transform(&camera);
 
                         
-                        drawMap(map, mapSizeX, mapSizeY, NULL);
-
-                        //desenha o personagem;
-                        al_draw_filled_rectangle(player_1->x-player_1->width/2, player_1->y-player_1->height/2, player_1->x+player_1->width/2, player_1->y+player_1->height/2, al_map_rgb(255, 0, 0));
-                            
-
-                        // Desenha os inimigos
-                        for(int i = 0; i<MAX_ENEMYS; i++){
-
-                            al_draw_filled_rectangle(vetor_inimigos[i]->x-vetor_inimigos[i]->width/2, 
-                                vetor_inimigos[i]->y-vetor_inimigos[i]->height/2, vetor_inimigos[i]->x+vetor_inimigos[i]->width/2, vetor_inimigos[i]->y+vetor_inimigos[i]->height/2, al_map_rgb(0, 0, 255));
-                        }
-
-                        // Desenhar o sprite na tela
                         
+                        drawMap(map, mapSizeX, mapSizeY, NULL);
+                        
+                        //desenha o personagem;
+    
                         animacao(player_1, vetor_serpentes, &frame, &frame_serpente);
 
-                        //al_draw_filled_rectangle(tower->x - tower->width/2, tower->y - tower->height/2, tower->x + tower->width/2, tower->y+tower->height/2, al_map_rgb(255, 0, 255));
+                        if(player_1->timer > 0){
+                            player_1->timer--;
+                        }
+                        
                         al_draw_bitmap(torre_skin, tower->x - tower->width/2, tower->y - tower->height/2, 0);
                         if(!tower->gun->timer){
                             torre_shot(tower);
@@ -649,15 +740,13 @@ int main(){
                         if(frame_serpente > 3){
                             frame_serpente -= 3;
                         }
+
                         // Desenha o sprite da serpente;
                         for(int w =0; w<2; w++){
-                            al_draw_filled_rectangle(vetor_serpentes[w]->x-vetor_serpentes[w]->width/2, 
-                            vetor_serpentes[w]->y-vetor_serpentes[w]->height/2, vetor_serpentes[w]->x+vetor_serpentes[w]->width/2, vetor_serpentes[w]->y+vetor_serpentes[w]->height/2, al_map_rgb(0, 0, 255));
                             al_draw_bitmap_region(vetor_serpentes[w]->skin, 96 * (int) frame_serpente, 0, 96, 72, vetor_serpentes[w]->x - vetor_serpentes[w]->width/ 2, vetor_serpentes[w]->y - vetor_serpentes[w]->height /2, 0);
                         }
 
 
-                        al_draw_filled_rectangle(vetor_inimigos[0]->x - vetor_inimigos[0]->width/2, vetor_inimigos[0]->y - vetor_inimigos[0]->height/2, vetor_inimigos[0]->x + vetor_inimigos[0]->width/2, vetor_inimigos[0]->y+vetor_inimigos[0]->height/2, al_map_rgb(144, 8, 255));
                         frame_inimigo += 0.6f;
                         if(frame_inimigo > 6){
                             frame_inimigo -= 6;
@@ -673,14 +762,16 @@ int main(){
                         al_draw_filled_rectangle(plataform->x-plataform->w/2, 
                             plataform->y-plataform->h/2, plataform->x+plataform->w/2, plataform->y+plataform->h/2, al_map_rgb(100, 100, 100));
                         
-                        
+                        for(int a = 0; a<2; a++){
+                            if(vetor_estalactites[a] != NULL)
+                                al_draw_bitmap(vetor_estalactites[a]->skin, vetor_estalactites[a]->x - vetor_estalactites[a]->width/2, vetor_estalactites[a]->y - vetor_estalactites[a]->height/2, 0);
+                        }
                         al_flip_display();
                     } else if ((event.type == 10) || (event.type == 12)){
 
                         if (event.keyboard.keycode == 82) joystick_left(player_1->controle);
                         else if (event.keyboard.keycode == 83) joystick_right(player_1->controle);
                         else if (event.keyboard.keycode == 84) joystick_up(player_1->controle);
-                        // else if (event.keyboard.keycode == 85) joystick_down(player_1->controle);
                         else if (event.keyboard.keycode == ALLEGRO_KEY_LCTRL) joystick_agachar(player_1->controle);
                         else if(event.keyboard.keycode == ALLEGRO_KEY_SPACE) joystick_jump(player_1->controle);
                         else if(event.keyboard.keycode == ALLEGRO_KEY_PAD_MINUS) scale-=0.2f;
@@ -698,6 +789,7 @@ int main(){
         }
     }
 
+    // Destroi os elementos no final do jogo
     
     for(int i = 0; i<X_MAPA; i++){
         for(int j = 0; j< Y_MAPA; j++){
@@ -709,15 +801,22 @@ int main(){
         serpente_destroy(vetor_serpentes[i]);
     }
 
+    for(int a = 0; a<2; a++){
+        estalactite_destroy(vetor_estalactites[a]);
+    }
     for(int i = 0; i<MAX_ENEMYS; i++){
         inimigo_destroy(vetor_inimigos[i]);
     }
 
     plataforma_destroy(plataform);
     personagem_destroy(player_1);
-    al_destroy_bitmap(background);
+    torre_destroy(tower);
 
+    al_destroy_bitmap(background);
+    al_destroy_sample(song);
+    al_destroy_sample_instance(song_instance);
     al_destroy_font(font);
+    al_destroy_font(font2);
     al_destroy_display(disp);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);

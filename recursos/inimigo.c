@@ -41,6 +41,7 @@ void inimigo_move(inimigo *elemento,  int steps, char trajectory, int max_x, int
 }
 
 void inimigo_destroy(inimigo *elemento){
+    al_destroy_bitmap(elemento->sprite);
     free(elemento);
 }
 

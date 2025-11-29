@@ -12,7 +12,7 @@ typedef struct {
 
 } torre;
 
-torre *torre_create(int x, int y, int height, int width, int dir);
+torre *torre_create(int x, int y, int width, int heigth, int dir);
 void torre_shot(torre *elemento);
 void torre_destroy(torre *elemento);
 #endif
