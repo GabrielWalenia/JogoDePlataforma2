@@ -629,7 +629,7 @@ int main(){
             al_clear_to_color(al_map_rgb(0, 0, 0));
             al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2, ALLEGRO_ALIGN_CENTER, "TAKAKARANOMURO DOIS");
             al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2 + 40, ALLEGRO_ALIGN_CENTER, "PRESSIONE ENTER");
-
+            al_draw_text(font, al_map_rgb(255, 0, 0), X_SCREEN/2, Y_SCREEN/2 + 160, ALLEGRO_ALIGN_CENTER, "PRESSIONE ESC PARA SAIR");
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
                 if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
                     volume += 0.2f;
@@ -660,6 +660,7 @@ int main(){
 
             al_flip_display();  
             if (event.keyboard.keycode == ALLEGRO_KEY_ENTER) menu = false;
+            if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) break;
             if (event.type == 42) break;
 
         } else {
